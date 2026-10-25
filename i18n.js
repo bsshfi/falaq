@@ -87,7 +87,11 @@
         instPrompt: 'يُضاف فَلَق كأيقونة على شاشتك ويعمل بدون إنترنت.', instBtn: 'أضف فَلَق إلى الشاشة الرئيسية',
         instAndroid: ['افتح قائمة المتصفح ⋮', 'اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»'],
         upToDate: 'أنت على آخر إصدار', updating: 'يُحمَّل الإصدار الجديد…', noNet: 'لا يوجد اتصال للتحقق من التحديث',
-        inc: 'زيادة', dec: 'إنقاص'
+        inc: 'زيادة', dec: 'إنقاص',
+        tabAzkar: 'الأذكار', zkMorning: 'الصباح', zkEvening: 'المساء', zkSleep: 'النوم',
+        zkProgress: (a, b) => 'أنجزت ' + a + ' من ' + b, zkReset: 'إعادة البدء', zkSmaller: 'تصغير الخط', zkBigger: 'تكبير الخط',
+        zkDone: c => 'أتممت أذكار ' + c + '، تقبّل الله منك', zkTimes: n => n === 1 ? 'مرة واحدة' : 'التكرار ' + n,
+        zkSource: 'الأذكار من حصن المسلم كما في azkar.me، ونص القرآن الكريم من مشروع تنزيل (tanzil.net). اضغط على الذكر ليُعدّ.'
       }
     },
     en: {
@@ -183,7 +187,11 @@
         instPrompt: 'Falaq is added as an icon on your Home Screen and works offline.', instBtn: 'Add Falaq to Home Screen',
         instAndroid: ['Open the browser menu ⋮', 'Choose Install app or Add to Home screen'],
         upToDate: 'You have the latest version', updating: 'Downloading the new version…', noNet: 'No connection to check for updates',
-        inc: 'Increase', dec: 'Decrease'
+        inc: 'Increase', dec: 'Decrease',
+        tabAzkar: 'Adhkar', zkMorning: 'Morning', zkEvening: 'Evening', zkSleep: 'Sleep',
+        zkProgress: (a, b) => a + ' of ' + b + ' done', zkReset: 'Start over', zkSmaller: 'Smaller text', zkBigger: 'Larger text',
+        zkDone: c => 'You have completed the ' + c.toLowerCase() + ' adhkar. May Allah accept it.', zkTimes: n => n === 1 ? 'Once' : n + ' times',
+        zkSource: 'Adhkar from Hisn al-Muslim as on azkar.me. Quran text from the Tanzil Project (tanzil.net). Tap a dhikr to count it.'
       }
     }
   };

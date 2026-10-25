@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.1';
+  const VERSION = '1.2';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -229,7 +229,7 @@
       el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: 'rgba(237,231,218,.95)', 'stroke-width': 1.2 }, svg);
       const [x, y] = polar(a, R + 22);
       const anchor = x > 20 ? 'start' : x < -20 ? 'end' : 'middle';
-      el('text', { x, y: y + 4 + (anchor === 'middle' ? (y < 0 ? -6 : 8) : 0), 'text-anchor': anchor, fill: ink(.75), 'font-size': isEn() ? 11 : 11.5, 'font-family': 'Readex Pro, system-ui' }, svg).textContent = D.prayers[k];
+      el('text', { x, y: y + 4 + (anchor === 'middle' ? (y < 0 ? -6 : 8) : 0), 'text-anchor': anchor, fill: ink(.75), 'font-size': isEn() ? 11 : 11.5, 'font-family': 'IBM Plex Sans Arabic, system-ui' }, svg).textContent = D.prayers[k];
     });
     if (isToday) {
       const a = ang(now.valueOf());
@@ -293,7 +293,7 @@
     }
     D.cardinals.forEach((t, i) => {
       const a = i * 90, [x, y] = polar(a, 117);
-      el('text', { x, y: y + 7, 'text-anchor': 'middle', fill: a === 0 ? cssVar('--rose') : ink(.8), 'font-size': 20, 'font-family': 'Reem Kufi, system-ui', 'font-weight': 600, class: 'upright' }, rose).textContent = t;
+      el('text', { x, y: y + 7, 'text-anchor': 'middle', fill: a === 0 ? cssVar('--rose') : ink(.8), 'font-size': 20, 'font-family': 'IBM Plex Sans Arabic, system-ui', 'font-weight': 600, class: 'upright' }, rose).textContent = t;
     });
     const q = qiblaInfo().bearing;
     const [qx, qy] = polar(q, 128);
@@ -547,6 +547,79 @@
       '<p class="note" style="margin:0 0 12px">' + D.seasonDesc[s.seasonIndex] + '</p>';
   }
 
+  /* ---------- الأذكار ---------- */
+  const ZK = window.AZKAR;
+  let zkCat = null;
+  const zkDayKey = () => { const t = todayYMD(); return t.y + '-' + t.m + '-' + t.d; };
+  let ZS;
+  try { ZS = JSON.parse(localStorage.getItem('falaq-zk') || '{}'); } catch (e) { ZS = {}; }
+  const zkSave = () => { try { localStorage.setItem('falaq-zk', JSON.stringify(ZS)); } catch (e) {} };
+  function zkRemain(cat) {
+    if (ZS.day !== zkDayKey()) ZS = { day: zkDayKey() };
+    if (!Array.isArray(ZS[cat]) || ZS[cat].length !== ZK[cat].length) ZS[cat] = ZK[cat].map(x => x.c);
+    return ZS[cat];
+  }
+  function zkDefault() {
+    const now = new Date(), T = timesFor(todayYMD());
+    if (now >= T.fajr && now < T.asr) return 'morning';
+    if (now >= T.asr && now < new Date(T.isha.valueOf() + 2 * 36e5)) return 'evening';
+    return 'sleep';
+  }
+  const zkCatName = c => L(c === 'morning' ? 'zkMorning' : c === 'evening' ? 'zkEvening' : 'zkSleep');
+  function zkCtr(total, r) {
+    const C = 2 * Math.PI * 24, frac = r === 0 ? 1 : (total - r) / total;
+    return '<svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="24" fill="none" stroke="var(--line-2)" stroke-width="3"/>' +
+      '<circle cx="27" cy="27" r="24" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + (C * (1 - frac)).toFixed(2) + '"/></svg>' +
+      '<b>' + (r === 0 ? '✓' : num(r)) + '</b>';
+  }
+  function zkCard(x, i, r) {
+    return '<article class="zk' + (r === 0 ? ' done' : '') + '" dir="rtl" data-i="' + i + '" role="button" tabindex="0">' +
+      (x.r ? '<div class="ref">' + esc(x.r) + '</div>' : '') +
+      '<div class="txt">' + esc(x.t) + '</div>' +
+      (x.f ? '<div class="fadl">' + esc(x.f) + '</div>' : '') +
+      '<div class="foot"><span class="times-lbl">' + num(L('zkTimes', x.c)) + '</span><div class="ctr">' + zkCtr(x.c, r) + '</div></div></article>';
+  }
+  function zkProgress() {
+    const rem = zkRemain(zkCat), total = rem.length, done = rem.filter(n => n === 0).length;
+    $('#zkBar').style.width = Math.round(done / total * 100) + '%';
+    $('#zkCount').textContent = L('zkProgress', num(done), num(total));
+    const all = $('#zkDoneAll');
+    all.hidden = done !== total;
+    all.textContent = L('zkDone', zkCatName(zkCat));
+  }
+  function renderAzkar() {
+    if (!zkCat) zkCat = zkDefault();
+    seg('#zkSeg', zkCat, v => { zkCat = v; renderAzkar(); window.scrollTo(0, 0); });
+    document.documentElement.style.setProperty('--zk-size', (S.zkSize || 22) + 'px');
+    const rem = zkRemain(zkCat);
+    $('#zkList').innerHTML = ZK[zkCat].map((x, i) => zkCard(x, i, rem[i])).join('');
+    $('#zkList').querySelectorAll('.zk').forEach(card => {
+      card.onclick = () => zkTap(+card.dataset.i);
+      card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zkTap(+card.dataset.i); } };
+    });
+    zkProgress();
+  }
+  function zkTap(i) {
+    const rem = zkRemain(zkCat);
+    if (rem[i] === 0) return;
+    rem[i]--; zkSave();
+    const card = $('.zk[data-i="' + i + '"]');
+    card.querySelector('.ctr').innerHTML = zkCtr(ZK[zkCat][i].c, rem[i]);
+    if (navigator.vibrate) navigator.vibrate(rem[i] === 0 ? 35 : 8);
+    if (rem[i] === 0) {
+      card.classList.add('done');
+      let j = rem.findIndex((n, k) => k > i && n > 0);
+      if (j < 0) j = rem.findIndex(n => n > 0);
+      const smooth = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+      if (j >= 0) setTimeout(() => $('.zk[data-i="' + j + '"]').scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' }), 220);
+      else setTimeout(() => window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' }), 220);
+    }
+    zkProgress();
+  }
+  $('#zkReset').onclick = () => { ZS[zkCat] = ZK[zkCat].map(x => x.c); zkSave(); renderAzkar(); window.scrollTo(0, 0); };
+  $('#zkSmaller').onclick = () => { S.zkSize = Math.max(16, (S.zkSize || 22) - 2); save(); renderAzkar(); };
+  $('#zkBigger').onclick = () => { S.zkSize = Math.min(34, (S.zkSize || 22) + 2); save(); renderAzkar(); };
+
   /* ---------- الإعدادات ---------- */
   function seg(id, val, cb) {
     $(id).querySelectorAll('button').forEach(b => {
@@ -696,6 +769,7 @@
     rafOn = v === 'qibla';
     if (v === 'qibla') { renderSunQibla(); updateSkyMarks(); requestAnimationFrame(loop); }
     if (v === 'moon') renderMoon();
+    if (v === 'azkar') renderAzkar();
     if (v === 'settings') renderSettings();
     window.scrollTo(0, 0);
   }
@@ -704,6 +778,7 @@
   function renderAll() {
     renderLoc(); setGlow(); renderPrayer(); renderSettings();
     if (current === 'moon') renderMoon();
+    if (current === 'azkar') renderAzkar();
     if (current === 'qibla') { renderSunQibla(); updateSkyMarks(); renderCompass(); }
   }
 
@@ -753,10 +828,15 @@
       if (current === 'prayer') renderPrayer();
       if (current === 'qibla') updateSkyMarks();
       if (current === 'moon' && (p.mi % 5 === 0 || dk !== lastDay)) renderMoon();
-      if (dk !== lastDay) { lastDay = dk; if (current === 'qibla') renderSunQibla(); }
+      if (dk !== lastDay) { const first = !lastDay; lastDay = dk; if (current === 'qibla') renderSunQibla(); if (current === 'azkar' && !first) renderAzkar(); }
     }
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastMinute = -1; renderAll(); checkLocation(); } });
+
+  /* منع التكبير بالضغط المزدوج أو القرص */
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+  document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
   /* ---------- البداية ---------- */
   applyTheme();

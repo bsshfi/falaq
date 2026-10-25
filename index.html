@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" data-theme="auto">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>فَلَق</title>
 <meta name="description" content="فَلَق — مواقيت الصلاة والقبلة ومنازل القمر، يعمل بدون إنترنت">
 <meta name="theme-color" content="#0F1830">
@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Readex+Pro:wght@300;400;500;600&family=Reem+Kufi:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
 <script>
 /* تطبيق المظهر واللغة قبل الرسم لتجنب الوميض */
 (function(){try{var s=JSON.parse(localStorage.getItem('falaq')||'{}'),d=document.documentElement;
@@ -31,8 +31,10 @@ d.setAttribute('data-theme',s.theme||'auto');if(s.lang==='en'){d.lang='en';d.dir
   --tabbar:rgba(22,33,63,.86); --toast-bg:#E9E4D8; --toast-fg:#151a2b;
   --moon-shadow:rgba(14,22,44,.9); --moon-halo:233,228,216; --moon-lit:#E9E4D8; --moon-dark:#26335C;
   --glow:0; --glow-c:229,156,147;
-  --display:'Reem Kufi', 'SF Arabic', 'Geeza Pro', system-ui, sans-serif;
-  --body:'Readex Pro', 'SF Arabic', 'Geeza Pro', system-ui, sans-serif;
+  --display:'Thmanyah Sans', 'IBM Plex Sans Arabic', 'SF Arabic', 'Geeza Pro', system-ui, sans-serif;
+  --body:'Thmanyah Sans', 'IBM Plex Sans Arabic', 'SF Arabic', 'Geeza Pro', system-ui, sans-serif;
+  --naskh:'Thmanyah Serif Text', 'Amiri', 'Noto Naskh Arabic', 'Geeza Pro', serif;
+  --zk-size:22px;
   --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
   color-scheme:dark;
 }
@@ -58,8 +60,10 @@ d.setAttribute('data-theme',s.theme||'auto');if(s.lang==='en'){d.lang='en';d.dir
     color-scheme:light;
   }
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{
   background:var(--night);
   background-image:radial-gradient(120% 55% at 50% 108%, rgba(var(--glow-c),calc(var(--glow)*.42)) 0%, rgba(var(--glow-c),0) 70%);
@@ -75,10 +79,10 @@ a{color:var(--accent)}
 
 /* رأس الصفحة */
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
-.brand{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:0;line-height:1;margin:0}
+.brand{font-family:var(--display);font-weight:700;font-size:27px;letter-spacing:0;line-height:1;margin:0}
 .brand small{display:block;font-family:var(--body);font-weight:400;font-size:11px;color:var(--faint);letter-spacing:.18em;margin-top:5px;text-align:end}
 [lang="en"] .brand{letter-spacing:.04em}
-[lang="en"] .brand small{letter-spacing:0;font-family:var(--display);font-size:13px}
+[lang="en"] .brand small{letter-spacing:0;font-family:var(--display);font-size:12px}
 .loc{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;max-width:58%}
 .loc span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .loc svg{flex:none}
@@ -185,7 +189,7 @@ a{color:var(--accent)}
 .set label,.set .lbl{font-size:15px}
 .set .val{color:var(--muted);font-size:14px}
 [dir="rtl"] .chev{transform:scaleX(-1)}
-select{font:inherit;background:transparent;border:0;font-size:14px;text-align:end;max-width:60%;-webkit-appearance:none;appearance:none;color:var(--muted)}
+select{font:inherit;background:transparent;border:0;font-size:16px;text-align:end;max-width:60%;-webkit-appearance:none;appearance:none;color:var(--muted)}
 select option{background:var(--night-2);color:var(--text)}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;flex:none}
 .seg button{padding:6px 12px;font-size:14px;color:var(--muted)}
@@ -202,9 +206,36 @@ select option{background:var(--night-2);color:var(--text)}
 .wamd .tag{display:block;font-size:13px;color:var(--muted);margin-top:4px}
 .wamd .dom{display:block;font-family:Montserrat,system-ui,sans-serif;font-weight:300;font-size:11px;letter-spacing:.24em;color:var(--faint);margin-top:2px;direction:ltr}
 
+/* الأذكار */
+.zk-top{display:flex;align-items:center;gap:10px;margin-top:14px}
+.zk-top .seg{flex:1;display:grid;grid-template-columns:repeat(3,1fr)}
+.zk-top .seg button{padding:9px 4px;font-size:15px}
+.zk-size{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;flex:none}
+.zk-size button{width:38px;height:38px;font-family:var(--naskh);color:var(--muted);font-size:15px}
+.zk-size button+button{font-size:21px;border-inline-start:1px solid var(--line-2)}
+.zk-prog{margin:14px 0 6px}
+.zk-prog .bar-meta button{color:var(--accent);font-size:12.5px}
+.zk-done-all{text-align:center;padding:18px 10px 6px;font-family:var(--naskh);font-size:20px;color:var(--accent)}
+.zk-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.zk{position:relative;background:var(--night-2);border-radius:20px;padding:18px 18px 14px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:opacity .25s,transform .12s}
+.zk:active{transform:scale(.985)}
+@media (prefers-reduced-motion:reduce){.zk{transition:none}.zk:active{transform:none}}
+.zk .ref{font-size:12.5px;color:var(--accent);margin-bottom:6px}
+.zk .txt{font-family:var(--naskh);font-size:var(--zk-size);line-height:2.05;white-space:pre-line;direction:rtl;text-align:right}
+.zk .fadl{font-size:13px;color:var(--muted);line-height:1.75;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);direction:rtl;text-align:right}
+.zk .foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+.zk .times-lbl{font-size:12.5px;color:var(--faint)}
+.zk .ctr{position:relative;width:54px;height:54px;flex:none}
+.zk .ctr svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.zk .ctr b{position:absolute;inset:0;display:grid;place-items:center;font-size:19px;font-weight:600;direction:ltr}
+.zk.done{opacity:.42}
+.zk.done .txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.zk.done .fadl{display:none}
+.zk.done .ctr b{color:var(--accent)}
+
 /* الشريط السفلي */
-.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--safe-b) + 12px);width:calc(100% - 32px);max-width:448px;display:grid;grid-template-columns:repeat(4,1fr);background:var(--tabbar);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--line);border-radius:22px;padding:6px;z-index:20}
-.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 6px;border-radius:16px;color:var(--faint);font-size:11.5px}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--safe-b) + 12px);width:calc(100% - 24px);max-width:456px;display:grid;grid-template-columns:repeat(5,1fr);background:var(--tabbar);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--line);border-radius:22px;padding:6px;z-index:20}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 6px;border-radius:16px;color:var(--faint);font-size:11px;white-space:nowrap}
 .tabs button svg{width:24px;height:24px}
 .tabs button.on{color:var(--accent);background:rgba(240,194,106,.12)}
 
@@ -230,7 +261,7 @@ select option{background:var(--night-2);color:var(--text)}
 .city-list button{display:flex;justify-content:space-between;width:100%;padding:13px 4px;border-bottom:1px solid var(--line);font-size:15px}
 .city-list button span{color:var(--muted);font-size:13px;direction:ltr}
 .field{display:flex;gap:8px;margin:8px 0}
-.field input{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--night-3);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;direction:ltr;text-align:center}
+.field input{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--night-3);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;direction:ltr;text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--safe-b) + 96px);background:var(--toast-bg);color:var(--toast-fg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;max-width:calc(100% - 40px);text-align:center}
 .toast.on{opacity:1}
 .banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(240,194,106,.12);border:1px solid rgba(240,194,106,.32);border-radius:14px;padding:10px 12px;margin-top:10px;font-size:13.5px}
@@ -296,6 +327,21 @@ select option{background:var(--night-2);color:var(--text)}
       <dl class="rows" id="sunQibla"></dl>
       <p class="note" data-t="transitNote"></p>
     </div>
+  </section>
+
+  <!-- الأذكار -->
+  <section class="view" id="v-azkar">
+    <div class="zk-top">
+      <div class="seg" id="zkSeg"><button data-v="morning" data-t="zkMorning"></button><button data-v="evening" data-t="zkEvening"></button><button data-v="sleep" data-t="zkSleep"></button></div>
+      <div class="zk-size"><button id="zkSmaller" data-ta="zkSmaller">ع</button><button id="zkBigger" data-ta="zkBigger">ع</button></div>
+    </div>
+    <div class="zk-prog">
+      <div class="bar"><i id="zkBar" style="width:0"></i></div>
+      <div class="bar-meta"><span id="zkCount"></span><button id="zkReset" data-t="zkReset"></button></div>
+    </div>
+    <div id="zkDoneAll" class="zk-done-all" hidden></div>
+    <div class="zk-list" id="zkList"></div>
+    <p class="note" data-t="zkSource" style="margin-top:16px"></p>
   </section>
 
   <!-- القمر -->
@@ -391,6 +437,7 @@ select option{background:var(--night-2);color:var(--text)}
 <nav class="tabs">
   <button class="on" data-v="prayer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 17h18M6.5 17a5.5 5.5 0 0 1 11 0"/><path d="M12 6v2.5M5.2 9.7l1.6 1.4M18.8 9.7l-1.6 1.4M8 21h8"/></svg><span data-t="tabPrayer"></span></button>
   <button data-v="qibla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5L10.6 10.6 8.5 15.5l4.9-2.1z"/></svg><span data-t="tabQibla"></span></button>
+  <button data-v="azkar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="8.43" cy="14.49" r="1.25" fill="currentColor" stroke="none"/><circle cx="6.36" cy="12.10" r="1.25" fill="currentColor" stroke="none"/><circle cx="5.71" cy="9.00" r="1.25" fill="currentColor" stroke="none"/><circle cx="6.65" cy="5.98" r="1.25" fill="currentColor" stroke="none"/><circle cx="8.94" cy="3.79" r="1.25" fill="currentColor" stroke="none"/><circle cx="12.00" cy="3.00" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.06" cy="3.79" r="1.25" fill="currentColor" stroke="none"/><circle cx="17.35" cy="5.98" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.29" cy="9.00" r="1.25" fill="currentColor" stroke="none"/><circle cx="17.64" cy="12.10" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.57" cy="14.49" r="1.25" fill="currentColor" stroke="none"/><path d="M12 15.6v2.6" stroke-width="1.6"/><path d="M10.4 18.4h3.2l-.6 3.1h-2z" fill="currentColor" stroke="none"/></svg><span data-t="tabAzkar"></span></button>
   <button data-v="moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span data-t="tabMoon"></span></button>
   <button data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span data-t="tabSettings"></span></button>
 </nav>
@@ -399,6 +446,7 @@ select option{background:var(--night-2);color:var(--text)}
 <div class="toast" id="toast" role="status"></div>
 
 <script src="astro.js"></script>
+<script src="azkar.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>

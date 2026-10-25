@@ -3,7 +3,7 @@
   'use strict';
   const VERSION = '1.3';
   // رابط خادم الإشعارات (Cloudflare Worker) — ضع رابطك هنا بعد إنشائه
-  const PUSH_API = 'https://falaq-push.YOUR-SUBDOMAIN.workers.dev';
+  const PUSH_API = 'https://falaq-push.bsshfi.workers.dev';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;

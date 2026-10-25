@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.3';
+  const VERSION = '1.4';
   // رابط خادم الإشعارات (Cloudflare Worker) — ضع رابطك هنا بعد إنشائه
   const PUSH_API = 'https://falaq-push.bsshfi.workers.dev';
   const A = window.Astro;
@@ -637,7 +637,7 @@
     if (!sel.options.length) for (const k in A.METHODS) { const o = document.createElement('option'); o.value = k; o.textContent = D.methods[k]; sel.appendChild(o); }
     sel.value = S.method;
     sel.onchange = () => { S.method = sel.value; save(); renderAll(); };
-    seg('#setLang', S.lang, v => { S.lang = v; save(); applyLang(); buildCompass(); renderAll(); });
+    seg('#setLang', S.lang, v => { S.lang = v; save(); applyLang(); buildCompass(); renderAll(); renderGate(); });
     seg('#setTheme', S.theme, v => { S.theme = v; save(); applyTheme(); buildCompass(); renderAll(); });
     seg('#setAsr', S.asr, v => { S.asr = +v; save(); renderAll(); });
     seg('#setH24', S.h24 ? 1 : 0, v => { S.h24 = v === '1'; save(); renderAll(); });
@@ -821,20 +821,46 @@
   const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const SHARE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A9BD8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
-  function openInstall() {
-    const ol = arr => '<ol class="steps">' + arr.map(x => '<li>' + x + '</li>').join('') + '</ol>';
-    let body;
-    if (isStandalone()) body = '<p>' + L('instDone') + '</p>';
-    else if (isIOS()) body = ol(L('instIOS', SHARE_ICON));
-    else if (deferredPrompt) body = '<p>' + L('instPrompt') + '</p><button class="link-btn primary" id="doInstall">' + L('instBtn') + '</button>';
-    else body = ol(L('instAndroid'));
-    sheet('<h2>' + L('instTitle') + '</h2><p>' + L('instSub') + '</p>' + body + '<button class="link-btn" id="instLater">' + (isStandalone() ? L('close') : L('later')) + '</button>', () => {
-      const d = $('#doInstall');
-      if (d) d.onclick = () => { deferredPrompt.prompt(); deferredPrompt.userChoice.finally(() => { deferredPrompt = null; closeSheet(); }); };
-      $('#instLater').onclick = closeSheet;
-    });
-    S.installSeen = true; save();
+  const isMobile = () => isIOS() || /android|mobi/i.test(navigator.userAgent);
+  const inAppBrowser = () => /Instagram|FBAN|FBAV|FB_IAB|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|Line\//i.test(navigator.userAgent);
+  const iosChrome = () => /CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent);
+  const DOTS_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="none" stroke="#5A9BD8" stroke-width="1.6"/><circle cx="7.5" cy="12" r="1.5" fill="#5A9BD8"/><circle cx="12" cy="12" r="1.5" fill="#5A9BD8"/><circle cx="16.5" cy="12" r="1.5" fill="#5A9BD8"/></svg>';
+  const ADD_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A9BD8" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+  // شاشة الترحيب: تظهر كل مرة يُفتح فيها فَلَق من متصفح الجوال
+  function renderGate() {
+    const g = $('#gate'); if (!g || g.hidden) return;
+    const ol = arr => '<ol class="steps">' + arr.map(x => '<li><span>' + x + '</span></li>').join('') + '</ol>';
+    let steps = '', arrow = '';
+    const btn = $('#gateInstall'), copy = $('#gateCopy');
+    btn.hidden = true; copy.hidden = true;
+    if (inAppBrowser()) { steps = ol(L('gateInApp')); copy.hidden = false; arrow = 'top'; }
+    else if (isIOS() && iosChrome()) { steps = ol(L('gateIOSChrome', SHARE_ICON, ADD_ICON)); arrow = 'top'; }
+    else if (isIOS()) { steps = ol(L('gateIOS', DOTS_ICON, SHARE_ICON, ADD_ICON)); arrow = 'bottom'; }
+    else if (deferredPrompt) { btn.hidden = false; }
+    else { steps = ol(L('gateAndroid')); arrow = 'top'; }
+    $('#gateSteps').innerHTML = steps;
+    const a = $('#gateArrow');
+    a.className = 'gate-arrow ' + arrow; a.hidden = !arrow;
   }
+  function openGate() {
+    if (isStandalone()) { sheet('<h2>' + L('instTitle') + '</h2><p>' + L('instDone') + '</p><button class="link-btn" id="instLater">' + L('close') + '</button>', () => { $('#instLater').onclick = closeSheet; }); return; }
+    closeSheet();
+    $('#gate').hidden = false; document.body.classList.add('gated');
+    renderGate();
+  }
+  function closeGate() {
+    $('#gate').hidden = true; document.body.classList.remove('gated');
+    try { sessionStorage.setItem('falaq-browse', '1'); } catch (e) {}
+  }
+  const openInstall = openGate;
+  window.addEventListener('beforeinstallprompt', () => setTimeout(renderGate, 0));
+  window.addEventListener('appinstalled', () => { $('#gate').hidden = true; document.body.classList.remove('gated'); });
+  $('#gateSkip').onclick = closeGate;
+  $('#gateInstall').onclick = () => { if (!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt.userChoice.finally(() => { deferredPrompt = null; renderGate(); }); };
+  $('#gateCopy').onclick = () => {
+    const url = location.href.split('#')[0];
+    (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast(L('gateCopied'))).catch(() => toast(url));
+  };
 
   /* ---------- التنقل ---------- */
   let current = 'prayer';
@@ -921,7 +947,8 @@
   renderAll();
   checkLocation();
   pushSync();
-  if (!isStandalone() && !S.installSeen && /mobi|iphone|ipad|android/i.test(navigator.userAgent)) setTimeout(openInstall, 1200);
+  let browsing = false; try { browsing = sessionStorage.getItem('falaq-browse') === '1'; } catch (e) {}
+  if (!isStandalone() && isMobile() && !browsing) openGate();
 
   if ('serviceWorker' in navigator) {
     const hadController = !!navigator.serviceWorker.controller;

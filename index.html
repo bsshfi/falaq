@@ -245,6 +245,30 @@ select option{background:var(--night-2);color:var(--text)}
 .tabs button svg{width:24px;height:24px}
 .tabs button.on{color:var(--accent);background:rgba(240,194,106,.12)}
 
+/* شاشة الترحيب للإضافة */
+body.gated{overflow:hidden}
+body.gated .tabs{display:none}
+.gate{position:fixed;inset:0;z-index:50;overflow:auto;background:var(--night);background-image:radial-gradient(130% 60% at 50% 112%, rgba(229,156,147,.38) 0%, rgba(240,194,106,.12) 38%, rgba(240,194,106,0) 70%)}
+.gate-in{max-width:420px;margin:0 auto;padding:calc(var(--safe-t) + 44px) 22px calc(var(--safe-b) + 110px);text-align:center}
+.gate-icon{width:96px;height:96px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.35),0 0 0 1px var(--line);display:block;margin:0 auto}
+.gate-title{font-family:var(--display);font-size:38px;font-weight:700;margin:16px 0 4px;line-height:1.1}
+.gate-sub{color:var(--muted);font-size:15.5px;margin:0 auto 20px;max-width:30ch}
+.gate-feats{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:2px;text-align:start}
+.gate-feats li{display:flex;align-items:center;gap:12px;padding:10px 4px;font-size:15px;border-bottom:1px solid var(--line)}
+.gate-feats li:last-child{border-bottom:0}
+.gate-feats svg{width:24px;height:24px;flex:none;color:var(--accent)}
+.gate .steps{background:var(--night-2);border-radius:18px;padding:6px 14px;text-align:start;margin:0}
+.gate .steps li{font-size:14.5px;line-height:1.6}
+.gate-skip{display:block;margin:22px auto 0;color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:4px;padding:8px}
+.gate-arrow{position:fixed;width:46px;height:46px;border-radius:50%;background:var(--gold);color:#1a1405;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:51}
+.gate-arrow svg{width:26px;height:26px}
+.gate-arrow.bottom{bottom:calc(var(--safe-b) + 14px);right:18px;animation:nudge-down 1.3s ease-in-out infinite}
+.gate-arrow.top{top:calc(var(--safe-t) + 14px);right:18px;animation:nudge-up 1.3s ease-in-out infinite}
+.gate-arrow.top svg{transform:rotate(180deg)}
+@keyframes nudge-down{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@keyframes nudge-up{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.gate-arrow{animation:none!important}}
+
 /* النوافذ */
 .sheet-bg{position:fixed;inset:0;background:rgba(6,10,22,.55);z-index:40;display:none;align-items:flex-end;justify-content:center}
 .sheet-bg.on{display:flex}
@@ -257,7 +281,7 @@ select option{background:var(--night-2);color:var(--text)}
 .steps{list-style:none;padding:0;margin:14px 0;counter-reset:s}
 .steps li{display:flex;gap:12px;align-items:center;padding:10px 0;counter-increment:s;font-size:15px}
 .steps li::before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--night-3);display:grid;place-items:center;font-size:13px;color:var(--accent)}
-.steps svg{vertical-align:-5px}
+.steps svg{vertical-align:-5px;display:inline-block;margin:0 2px}
 .month{width:100%;border-collapse:collapse;font-size:13px}
 .month th{color:var(--muted);font-weight:500;padding:8px 2px;position:sticky;top:-10px;background:var(--night-2);font-family:var(--body)}
 .month td{text-align:center;padding:8px 2px;border-top:1px solid var(--line);direction:ltr}
@@ -453,6 +477,23 @@ select option{background:var(--night-2);color:var(--text)}
   <button data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span data-t="tabSettings"></span></button>
 </nav>
 
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="gate-in">
+    <img class="gate-icon" src="icons/icon-192.png" alt="" width="96" height="96">
+    <h2 class="gate-title" id="gateTitle" data-t="gateTitle"></h2>
+    <p class="gate-sub" data-t="gateSub"></p>
+    <ul class="gate-feats">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span data-t="gateF1"></span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M9 16a4.5 4.5 0 0 1 6 0"/><circle cx="12" cy="19.3" r="1" fill="currentColor"/></svg><span data-t="gateF2"></span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg><span data-t="gateF3"></span></li>
+    </ul>
+    <div id="gateSteps"></div>
+    <button class="link-btn primary" id="gateInstall" data-t="gateBtn" hidden></button>
+    <button class="link-btn" id="gateCopy" data-t="gateCopy" hidden></button>
+    <button class="gate-skip" id="gateSkip" data-t="gateSkip"></button>
+  </div>
+  <div class="gate-arrow" id="gateArrow" hidden aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5"/></svg></div>
+</div>
 <div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" role="status"></div>
 

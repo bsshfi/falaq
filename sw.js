@@ -1,10 +1,10 @@
 /* فَلَق — يعمل بدون إنترنت. غيّر رقم الإصدار مع كل تحديث */
-const VERSION = 'falaq-1.5';
+const VERSION = 'falaq-1.6';
 const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

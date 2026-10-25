@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.5';
+  const VERSION = '1.6';
   // رابط خادم الإشعارات (Cloudflare Worker) — ضع رابطك هنا بعد إنشائه
   const PUSH_API = 'https://falaq-push.bsshfi.workers.dev';
   const A = window.Astro;
@@ -165,6 +165,8 @@
   function setGlow() {
     const alt = A.sunPos(new Date(), S.loc.lat, S.loc.lng).altitude;
     const r = document.documentElement.style;
+    // وهج بنفسجي أعلى الصفحة: أقوى عند الفجر والمغرب
+    r.setProperty('--wash', (0.16 + 0.42 * Math.max(0, 1 - Math.abs(alt + 4) / 14)).toFixed(2));
     if (alt > 8) { r.setProperty('--glow', '.22'); r.setProperty('--glow-c', '156,195,230'); }
     else { r.setProperty('--glow', String(Math.max(0, 1 - Math.abs(alt + 3) / 13).toFixed(2))); r.setProperty('--glow-c', alt < -1 ? '229,156,147' : '240,194,106'); }
   }
@@ -209,6 +211,13 @@
     const svg = $('#dial'); svg.innerHTML = '';
     const noon = T.solarNoon.valueOf(), R = 116, bg = cssVar('--night');
     const ang = t => (t - noon) / DAY * 360;
+    // توهج داخلي خفيف داخل القرص
+    const di = cssVar('--dial-in') || '120,86,180';
+    const defs = el('defs', {}, svg), rg = el('radialGradient', { id: 'dialIn', cx: '50%', cy: '50%', r: '50%' }, defs);
+    el('stop', { offset: '55%', 'stop-color': 'rgb(' + di + ')', 'stop-opacity': 0 }, rg);
+    el('stop', { offset: '88%', 'stop-color': 'rgb(' + di + ')', 'stop-opacity': .16 }, rg);
+    el('stop', { offset: '100%', 'stop-color': 'rgb(' + di + ')', 'stop-opacity': .34 }, rg);
+    el('circle', { r: R - 9, fill: 'url(#dialIn)' }, svg);
     const N = 144;
     for (let i = 0; i < N; i++) {
       const t0 = noon - DAY / 2 + i * DAY / N, t1 = t0 + DAY / N;
@@ -365,9 +374,47 @@
     if (h === null) return;
     const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
     heading = ((h + so) % 360 + 360) % 360; // قراءة خام بدون تنعيم
+    // بيانات تقدير الجودة فقط — لا تغيّر القراءة المعروضة
+    if (typeof e.webkitCompassAccuracy === 'number') compassAcc = e.webkitCompassAccuracy;
+    if (e.beta !== null && e.gamma !== null) tilt = Math.max(Math.abs(e.beta), Math.abs(e.gamma));
+    const now = performance.now();
+    samples.push([now, heading]);
+    while (samples.length && now - samples[0][0] > 1500) samples.shift();
+  }
+  let compassAcc = null, tilt = 0, samples = [], lastQual = 0;
+  // الجودة: 4 ممتازة، 3 جيدة، 2 متوسطة، 1 ضعيفة
+  function compassQuality() {
+    let q;
+    if (compassAcc !== null) {
+      q = compassAcc < 0 ? 1 : compassAcc <= 10 ? 4 : compassAcc <= 20 ? 3 : compassAcc <= 35 ? 2 : 1;
+    } else {
+      if (samples.length < 4) return null;
+      // تذبذب القراءات خلال ثانية ونصف (انحراف دائري)
+      let sx = 0, sy = 0;
+      samples.forEach(([, h]) => { sx += Math.cos(h * Math.PI / 180); sy += Math.sin(h * Math.PI / 180); });
+      const R = Math.min(1, Math.hypot(sx, sy) / samples.length);
+      const sd = Math.sqrt(-2 * Math.log(Math.max(R, 1e-9))) * 180 / Math.PI;
+      q = sd < 2 ? 4 : sd < 5 ? 3 : sd < 10 ? 2 : 1;
+      if (!gotAbsolute) q = Math.min(q, 2);
+    }
+    if (tilt > 35) q = Math.max(1, q - 1);
+    return q;
+  }
+  function renderQuality() {
+    const box = $('#qQuality'), hint = $('#qHint');
+    if (heading === null) { box.hidden = true; hint.hidden = true; return; }
+    const now = performance.now();
+    if (now - lastQual < 500) return;
+    lastQual = now;
+    const q = compassQuality();
+    if (q === null) return;
+    box.hidden = false; box.dataset.q = q;
+    $('#qQualTxt').textContent = D.s.qual[q];
+    const h = q <= 2 ? L('hintCalib') : tilt > 35 ? L('hintTilt') : '';
+    hint.hidden = !h; hint.textContent = h;
   }
   let rafOn = false;
-  function loop() { if (!rafOn) return; renderCompass(); requestAnimationFrame(loop); }
+  function loop() { if (!rafOn) return; renderCompass(); renderQuality(); requestAnimationFrame(loop); }
   function startCompass() {
     const go = () => {
       window.addEventListener('deviceorientationabsolute', onOrient, true);
@@ -943,6 +990,13 @@
   }, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastMinute = -1; renderAll(); checkLocation(); pushSync(); } });
 
+  // رسالة بعد التحديث
+  try {
+    const prev = localStorage.getItem('falaq-ver');
+    if (prev && prev !== VERSION) setTimeout(() => toast(L('updated', num(VERSION))), 600);
+    localStorage.setItem('falaq-ver', VERSION);
+  } catch (e) {}
+
   /* منع التكبير بالضغط المزدوج أو القرص */
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
   document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
@@ -960,7 +1014,13 @@
 
   if ('serviceWorker' in navigator) {
     const hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // التحديث التلقائي: يتحقق عند الفتح وكل 15 دقيقة، وبدون إنترنت يكمل على النسخة المحفوظة
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      const check = () => { if (navigator.onLine !== false) reg.update().catch(() => {}); };
+      setInterval(check, 15 * 6e4);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+      window.addEventListener('online', check);
+    }).catch(() => {});
     let reloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
   }

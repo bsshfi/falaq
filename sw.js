@@ -1,5 +1,5 @@
 /* فَلَق — يعمل بدون إنترنت. غيّر رقم الإصدار مع كل تحديث */
-const VERSION = 'falaq-1.2';
+const VERSION = 'falaq-1.3';
 const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/icon-maskable-512.png'];
 
@@ -28,4 +28,22 @@ self.addEventListener('fetch', e => {
     if (r.ok) { const copy = r.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); }
     return r;
   }).catch(() => caches.match('index.html'))));
+});
+
+/* إشعارات الأذان: نص فقط بدون صوت أذان */
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data ? e.data.text() : '' }; }
+  const ar = d.lang !== 'en';
+  e.waitUntil(self.registration.showNotification(d.title || (ar ? 'فَلَق' : 'Falaq'), {
+    body: d.body || '', tag: d.tag || 'falaq', lang: ar ? 'ar' : 'en', dir: ar ? 'rtl' : 'ltr',
+    icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: './' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) if ('focus' in c) return c.focus();
+    return self.clients.openWindow('./');
+  }));
 });

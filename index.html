@@ -194,6 +194,12 @@ select option{background:var(--night-2);color:var(--text)}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;flex:none}
 .seg button{padding:6px 12px;font-size:14px;color:var(--muted)}
 .seg button.on{background:var(--gold);color:#1a1405;font-weight:600}
+.switch{position:relative;width:50px;height:30px;border-radius:30px;background:var(--night-3);flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:inset-inline-start .2s}
+.switch[aria-checked="true"]{background:var(--gold)}
+.switch[aria-checked="true"]::after{inset-inline-start:23px}
+.switch:disabled{opacity:.45}
+@media (prefers-reduced-motion:reduce){.switch,.switch::after{transition:none}}
 .stepper{display:inline-flex;align-items:center;gap:4px}
 .stepper button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line-2);font-size:18px;line-height:1;color:var(--text)}
 .stepper output{min-width:46px;text-align:center;font-size:14px;direction:ltr;color:var(--muted)}
@@ -379,6 +385,11 @@ select option{background:var(--night-2);color:var(--text)}
         <div><span class="lbl" data-t="timeFmt"></span><span class="seg" id="setH24"><button data-v="0" data-t="h12"></button><button data-v="1" data-t="h24"></button></span></div>
         <div><span class="lbl" data-t="digits"></span><span class="seg" id="setDigits"><button data-v="latn">123</button><button data-v="arab">١٢٣</button></span></div>
       </div>
+    </div>
+    <div class="set-group">
+      <h3 data-t="gNotify"></h3>
+      <div class="set" id="ntfSet"></div>
+      <p class="note" id="ntfNote"></p>
     </div>
     <div class="set-group">
       <h3 data-t="gLocation"></h3>

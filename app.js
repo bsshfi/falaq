@@ -1,7 +1,9 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.2';
+  const VERSION = '1.3';
+  // رابط خادم الإشعارات (Cloudflare Worker) — ضع رابطك هنا بعد إنشائه
+  const PUSH_API = 'https://falaq-push.YOUR-SUBDOMAIN.workers.dev';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -12,13 +14,16 @@
     method: 'umm_alqura', asr: 1, h24: false, digits: 'latn',
     adjust: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
     compassOffset: 0,
+    notify: { on: false, prayers: { fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true } },
     loc: { lat: 24.7136, lng: 46.6753, city: 0, tz: 'Asia/Riyadh', source: 'default' },
     installSeen: false
   };
   let S;
   try { S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('falaq') || '{}')); } catch (e) { S = Object.assign({}, DEFAULTS); }
   S.adjust = Object.assign({}, DEFAULTS.adjust, S.adjust || {});
-  const save = () => { try { localStorage.setItem('falaq', JSON.stringify(S)); } catch (e) {} };
+  S.notify = Object.assign({}, DEFAULTS.notify, S.notify || {});
+  S.notify.prayers = Object.assign({}, DEFAULTS.notify.prayers, S.notify.prayers || {});
+  const save = () => { try { localStorage.setItem('falaq', JSON.stringify(S)); } catch (e) {} if (typeof pushSync === 'function') pushSync(); };
 
   const deviceTZ = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } };
   const TZ = () => (S.loc.source === 'city' && S.loc.tz) ? S.loc.tz : deviceTZ();
@@ -645,9 +650,80 @@
     const off = $('#setOffset');
     off.querySelector('output').textContent = (S.compassOffset > 0 ? '+' : '') + num(S.compassOffset) + '°';
     off.querySelectorAll('button').forEach(b => b.onclick = () => { S.compassOffset = norm180(S.compassOffset + +b.dataset.d); save(); renderSettings(); });
+    renderNotify();
     $('#setLocVal').textContent = S.loc.source === 'default' ? L('defaultLoc') : locLabel();
     $('#verVal').textContent = L('version', num(VERSION));
     $('#aboutVer').textContent = L('aboutVer', num(VERSION));
+  }
+
+  /* ---------- إشعارات الأذان ---------- */
+  const pushReady = () => !!PUSH_API && !/YOUR-SUBDOMAIN/.test(PUSH_API);
+  const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  function ntfStatus() {
+    if (!pushReady()) return 'noServer';
+    if (isIOS() && !isStandalone()) return 'needInstall';
+    if (!pushSupported()) return 'unsupported';
+    if (Notification.permission === 'denied') return 'blocked';
+    return 'ok';
+  }
+  const keyBytes = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
+  let ntfBusy = false;
+  function renderNotify() {
+    const box = $('#ntfSet'); if (!box) return;
+    const st = ntfStatus(), on = S.notify.on && st === 'ok';
+    let html = '<div><span class="lbl">' + L('ntfOn') + '</span><button class="switch" id="ntfToggle" role="switch" aria-checked="' + on + '" aria-label="' + L('ntfOn') + '"' + (ntfBusy ? ' disabled' : '') + '></button></div>';
+    if (on) KEYS.forEach(k => {
+      html += '<div><span class="lbl">' + D.prayers[k] + '</span><button class="switch" role="switch" data-k="' + k + '" aria-checked="' + !!S.notify.prayers[k] + '" aria-label="' + D.prayers[k] + '"></button></div>';
+    });
+    box.innerHTML = html;
+    $('#ntfNote').textContent = ntfBusy ? L('ntfWorking') : st === 'ok' ? L(on ? 'ntfOnNote' : 'ntfOffNote') :
+      L({ noServer: 'ntfNoServer', needInstall: 'ntfNeedInstall', unsupported: 'ntfUnsupported', blocked: 'ntfBlocked' }[st]);
+    $('#ntfToggle').onclick = () => {
+      if (st === 'needInstall') { openInstall(); return; }
+      if (st !== 'ok') { toast($('#ntfNote').textContent); return; }
+      if (on) ntfDisable(); else ntfEnable();
+    };
+    box.querySelectorAll('.switch[data-k]').forEach(b => b.onclick = () => {
+      S.notify.prayers[b.dataset.k] = !S.notify.prayers[b.dataset.k]; save(); renderNotify();
+    });
+  }
+  async function pushSubscribe(test) {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      const k = await (await fetch(PUSH_API + '/vapid')).json();
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(k.key) });
+    }
+    const cfg = { lat: S.loc.lat, lng: S.loc.lng, tz: TZ(), method: S.method, asr: S.asr, adjust: S.adjust, prayers: S.notify.prayers, lang: S.lang };
+    const r = await fetch(PUSH_API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sub: sub.toJSON(), cfg, test: !!test }) });
+    if (!r.ok) throw new Error('server ' + r.status);
+    return r.json();
+  }
+  function ntfEnable() {
+    // طلب الإذن يجب أن يكون مباشرة بعد ضغطة المستخدم
+    const ask = Notification.permission === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
+    ntfBusy = true; renderNotify();
+    Promise.resolve(ask).then(perm => {
+      if (perm !== 'granted') { toast(L('ntfDenied')); return; }
+      return pushSubscribe(true).then(() => { S.notify.on = true; save(); toast(L('ntfOnToast')); });
+    }).catch(() => toast(L('ntfFail'))).finally(() => { ntfBusy = false; renderNotify(); });
+  }
+  async function ntfDisable() {
+    S.notify.on = false; save(); renderNotify(); toast(L('ntfOffToast'));
+    try {
+      const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        fetch(PUSH_API + '/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {});
+        await sub.unsubscribe();
+      }
+    } catch (e) {}
+  }
+  // مزامنة الإعدادات (الموقع، الطريقة، التعديلات، اللغة) مع الخادم
+  let syncT;
+  function pushSync() {
+    try { if (!S.notify.on || ntfBusy || ntfStatus() !== 'ok' || Notification.permission !== 'granted') return; } catch (e) { return; }
+    clearTimeout(syncT);
+    syncT = setTimeout(() => { pushSubscribe(false).catch(() => {}); }, 1500);
   }
 
   /* ---------- الموقع ---------- */
@@ -831,7 +907,7 @@
       if (dk !== lastDay) { const first = !lastDay; lastDay = dk; if (current === 'qibla') renderSunQibla(); if (current === 'azkar' && !first) renderAzkar(); }
     }
   }, 1000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastMinute = -1; renderAll(); checkLocation(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastMinute = -1; renderAll(); checkLocation(); pushSync(); } });
 
   /* منع التكبير بالضغط المزدوج أو القرص */
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
@@ -844,6 +920,7 @@
   buildCompass();
   renderAll();
   checkLocation();
+  pushSync();
   if (!isStandalone() && !S.installSeen && /mobi|iphone|ipad|android/i.test(navigator.userAgent)) setTimeout(openInstall, 1200);
 
   if ('serviceWorker' in navigator) {

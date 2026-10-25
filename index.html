@@ -262,7 +262,7 @@ body.gated .tabs{display:none}
 .gate-skip{display:block;margin:22px auto 0;color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:4px;padding:8px}
 .gate-arrow{position:fixed;width:46px;height:46px;border-radius:50%;background:var(--gold);color:#1a1405;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:51}
 .gate-arrow svg{width:26px;height:26px}
-.gate-arrow.bottom{bottom:calc(var(--safe-b) + 14px);right:18px;animation:nudge-down 1.3s ease-in-out infinite}
+.gate-arrow.bottom{bottom:calc(var(--safe-b) + 14px);left:calc(50% - 23px);animation:nudge-down 1.3s ease-in-out infinite}
 .gate-arrow.top{top:calc(var(--safe-t) + 14px);right:18px;animation:nudge-up 1.3s ease-in-out infinite}
 .gate-arrow.top svg{transform:rotate(180deg)}
 @keyframes nudge-down{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
@@ -481,7 +481,7 @@ body.gated .tabs{display:none}
   <div class="gate-in">
     <img class="gate-icon" src="icons/icon-192.png" alt="" width="96" height="96">
     <h2 class="gate-title" id="gateTitle" data-t="gateTitle"></h2>
-    <p class="gate-sub" data-t="gateSub"></p>
+    <p class="gate-sub" id="gateSub" data-t="gateSub"></p>
     <ul class="gate-feats">
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span data-t="gateF1"></span></li>
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M9 16a4.5 4.5 0 0 1 6 0"/><circle cx="12" cy="19.3" r="1" fill="currentColor"/></svg><span data-t="gateF2"></span></li>

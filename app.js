@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.4';
+  const VERSION = '1.5';
   // رابط خادم الإشعارات (Cloudflare Worker) — ضع رابطك هنا بعد إنشائه
   const PUSH_API = 'https://falaq-push.bsshfi.workers.dev';
   const A = window.Astro;
@@ -824,6 +824,11 @@
   const isMobile = () => isIOS() || /android|mobi/i.test(navigator.userAgent);
   const inAppBrowser = () => /Instagram|FBAN|FBAV|FB_IAB|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|Line\//i.test(navigator.userAgent);
   const iosChrome = () => /CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent);
+  const ua = navigator.userAgent;
+  const deskChromium = () => !isMobile() && /Chrome|Chromium|Edg\//.test(ua) && !/OPR\/|Firefox/.test(ua);
+  const deskSafari = () => !isMobile() && /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg\/|Firefox/.test(ua);
+  const gateSupported = () => isMobile() || deskChromium() || deskSafari();
+  const INSTALL_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A9BD8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg>';
   const DOTS_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="none" stroke="#5A9BD8" stroke-width="1.6"/><circle cx="7.5" cy="12" r="1.5" fill="#5A9BD8"/><circle cx="12" cy="12" r="1.5" fill="#5A9BD8"/><circle cx="16.5" cy="12" r="1.5" fill="#5A9BD8"/></svg>';
   const ADD_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A9BD8" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
   // شاشة الترحيب: تظهر كل مرة يُفتح فيها فَلَق من متصفح الجوال
@@ -836,9 +841,12 @@
     if (inAppBrowser()) { steps = ol(L('gateInApp')); copy.hidden = false; arrow = 'top'; }
     else if (isIOS() && iosChrome()) { steps = ol(L('gateIOSChrome', SHARE_ICON, ADD_ICON)); arrow = 'top'; }
     else if (isIOS()) { steps = ol(L('gateIOS', DOTS_ICON, SHARE_ICON, ADD_ICON)); arrow = 'bottom'; }
+    else if (deskChromium()) { if (deferredPrompt) btn.hidden = false; steps = ol(L('gateDesk', INSTALL_ICON)); arrow = 'top'; }
+    else if (deskSafari()) { steps = ol(L('gateMac')); }
     else if (deferredPrompt) { btn.hidden = false; }
     else { steps = ol(L('gateAndroid')); arrow = 'top'; }
     $('#gateSteps').innerHTML = steps;
+    $('#gateSub').textContent = L(isMobile() ? 'gateSub' : 'gateSubDesk');
     const a = $('#gateArrow');
     a.className = 'gate-arrow ' + arrow; a.hidden = !arrow;
   }
@@ -948,7 +956,7 @@
   checkLocation();
   pushSync();
   let browsing = false; try { browsing = sessionStorage.getItem('falaq-browse') === '1'; } catch (e) {}
-  if (!isStandalone() && isMobile() && !browsing) openGate();
+  if (!isStandalone() && gateSupported() && !browsing) openGate();
 
   if ('serviceWorker' in navigator) {
     const hadController = !!navigator.serviceWorker.controller;

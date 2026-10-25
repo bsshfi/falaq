@@ -345,7 +345,7 @@
     return {
       star: MANSIONS[found.index], index: found.index, day, len,
       next: MANSIONS[(found.index + 1) % 28], nextStart: new Date(found.end),
-      season: S.name, seasonDesc: S.desc, seasonDay: Math.round((t - sStart) / DAY) + 1, seasonLen: Math.round((sEnd - sStart) / DAY),
+      season: S.name, seasonDesc: S.desc, seasonIndex: si, nextSeasonIndex: (si + 1) % SEASONS.length, seasonDay: Math.round((t - sStart) / DAY) + 1, seasonLen: Math.round((sEnd - sStart) / DAY),
       nextSeason: SEASONS[(si + 1) % SEASONS.length].name, nextSeasonStart: new Date(sEnd)
     };
   }

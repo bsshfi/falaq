@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.7';
+  const VERSION = '1.8';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -12,7 +12,7 @@
     method: 'umm_alqura', asr: 1, h24: false, digits: 'latn',
     adjust: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
     compassOffset: 0,
-    notify: { on: false, news: true, prayers: { fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true } },
+    notify: { on: false, prayers: { fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true }, rem: { pre: 0, azkarM: false, azkarE: false, kahf: false, white: false } },
     loc: { lat: 24.7136, lng: 46.6753, city: 0, tz: 'Asia/Riyadh', source: 'default' },
     installSeen: false
   };
@@ -21,6 +21,8 @@
   S.adjust = Object.assign({}, DEFAULTS.adjust, S.adjust || {});
   S.notify = Object.assign({}, DEFAULTS.notify, S.notify || {});
   S.notify.prayers = Object.assign({}, DEFAULTS.notify.prayers, S.notify.prayers || {});
+  S.notify.rem = Object.assign({}, DEFAULTS.notify.rem, S.notify.rem || {});
+  delete S.notify.news;
   const save = () => { try { localStorage.setItem('falaq', JSON.stringify(S)); } catch (e) {} if (typeof pushSync === 'function') pushSync(); };
 
   const deviceTZ = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } };
@@ -123,7 +125,7 @@
     D = window.I18N[S.lang === 'en' ? 'en' : 'ar'];
     const h = document.documentElement;
     h.lang = isEn() ? 'en' : 'ar'; h.dir = isEn() ? 'ltr' : 'rtl';
-    document.title = isEn() ? 'Falaq' : 'فَلَق';
+    document.title = 'فلق | Falaq';
     document.querySelectorAll('[data-t]').forEach(e => { e.textContent = L(e.dataset.t); });
     document.querySelectorAll('[data-ta]').forEach(e => { e.setAttribute('aria-label', L(e.dataset.ta)); });
     $('#dial').setAttribute('aria-label', L('dialLabel'));
@@ -707,18 +709,31 @@
     const st = P.status();
     return st === 'granted' || st === 'default' ? 'ok' : st;
   }
-  const falaqCfg = () => ({ lat: S.loc.lat, lng: S.loc.lng, tz: TZ(), method: S.method, asr: S.asr, adjust: S.adjust, prayers: S.notify.prayers, lang: S.lang, prefs: { news: S.notify.news !== false } });
+  const falaqCfg = () => ({ lat: S.loc.lat, lng: S.loc.lng, tz: TZ(), method: S.method, asr: S.asr, adjust: S.adjust, prayers: S.notify.prayers, rem: S.notify.rem, lang: S.lang });
   let ntfBusy = false;
   function renderNotify() {
     const box = $('#ntfSet'); if (!box) return;
     const st = ntfStatus(), on = S.notify.on && st === 'ok' && P.status() === 'granted';
-    const sw = (k, lbl, val) => '<div><span class="lbl">' + lbl + '</span><button class="switch" role="switch" data-k="' + k + '" aria-checked="' + !!val + '" aria-label="' + lbl + '"></button></div>';
-    let html = '<div><span class="lbl">' + L('ntfOn') + '</span><button class="switch" id="ntfToggle" role="switch" aria-checked="' + on + '" aria-label="' + L('ntfOn') + '"' + (ntfBusy ? ' disabled' : '') + '></button></div>';
+    const row = (k, lbl, val, sub) => '<div><span class="lbl">' + lbl + (sub ? '<small>' + sub + '</small>' : '') + '</span><button class="switch" role="switch" data-k="' + k + '" aria-checked="' + !!val + '" aria-label="' + lbl + '"></button></div>';
+    box.innerHTML = '<div><span class="lbl">' + L('ntfOn') + '</span><button class="switch" id="ntfToggle" role="switch" aria-checked="' + on + '" aria-label="' + L('ntfOn') + '"' + (ntfBusy ? ' disabled' : '') + '></button></div>';
+    ['#ntfAdhanG', '#ntfPreG', '#ntfRemG'].forEach(g => { $(g).hidden = !on; });
     if (on) {
-      KEYS.forEach(k => { html += sw(k, D.prayers[k], S.notify.prayers[k]); });
-      html += sw('news', L('ntfNews'), S.notify.news !== false);
+      $('#ntfAdhan').innerHTML = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map(k => row('p:' + k, D.prayers[k], S.notify.prayers[k])).join('') +
+        row('p:sunrise', D.prayers.sunrise, S.notify.prayers.sunrise, L('sunriseSub'));
+      const r = S.notify.rem;
+      $('#ntfRem').innerHTML = row('r:azkarM', L('remAzkarM'), r.azkarM, L('remAzkarMSub')) + row('r:azkarE', L('remAzkarE'), r.azkarE, L('remAzkarESub')) +
+        row('r:kahf', L('remKahf'), r.kahf, L('remKahfSub')) + row('r:white', L('remWhite'), r.white, L('remWhiteSub'));
+      document.querySelectorAll('#ntfPre button').forEach(b => {
+        if (b.dataset.v !== '0') b.textContent = num(b.dataset.v);
+        b.classList.toggle('on', +b.dataset.v === r.pre);
+        b.onclick = () => { r.pre = +b.dataset.v; save(); renderNotify(); };
+      });
+      document.querySelectorAll('#ntfAdhan .switch, #ntfRem .switch').forEach(b => b.onclick = () => {
+        const [g, k] = b.dataset.k.split(':');
+        if (g === 'p') S.notify.prayers[k] = !S.notify.prayers[k]; else S.notify.rem[k] = !S.notify.rem[k];
+        save(); renderNotify();
+      });
     }
-    box.innerHTML = html;
     $('#ntfNote').textContent = ntfBusy ? L('ntfWorking') : st === 'ok' ? L(on ? 'ntfOnNote' : 'ntfOffNote') :
       L({ needInstall: 'ntfNeedInstall', unsupported: 'ntfUnsupported', blocked: 'ntfBlocked' }[st]);
     $('#ntfToggle').onclick = () => {
@@ -726,12 +741,18 @@
       if (st !== 'ok') { toast($('#ntfNote').textContent); return; }
       if (on) ntfDisable(); else ntfEnable();
     };
-    box.querySelectorAll('.switch[data-k]').forEach(b => b.onclick = () => {
-      const k = b.dataset.k;
-      if (k === 'news') S.notify.news = S.notify.news === false; else S.notify.prayers[k] = !S.notify.prayers[k];
-      save(); renderNotify();
-    });
   }
+  // فتح قسم من إشعار: #azkar=morning | #azkar=evening | #moon
+  function openFromHash() {
+    const h = location.hash;
+    if (!h) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    const m = /^#azkar=(morning|evening|sleep)/.exec(h);
+    if (m) { zkCat = m[1]; show('azkar'); }
+    else if (h === '#moon') show('moon');
+  }
+  window.addEventListener('hashchange', openFromHash);
+
   // after: دالة تُنفّذ بعد انتهاء طلب الإذن (مثل طلب الموقع في بطاقة الترحيب)
   function ntfEnable(after) {
     const ask = P.request();          // مباشرة داخل الضغطة
@@ -1004,6 +1025,7 @@
   checkLocation();
   pushSync();
   maybeWelcome();
+  openFromHash();
   let browsing = false; try { browsing = sessionStorage.getItem('falaq-browse') === '1'; } catch (e) {}
   if (!isStandalone() && gateSupported() && !browsing) openGate();
 

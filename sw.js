@@ -1,5 +1,5 @@
 /* فَلَق — يعمل بدون إنترنت. غيّر رقم الإصدار مع كل تحديث */
-const VERSION = 'falaq-1.7';
+const VERSION = 'falaq-1.8';
 const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'wamd-push.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/icon-maskable-512.png'];
 
@@ -37,13 +37,14 @@ self.addEventListener('push', e => {
   const ar = d.lang !== 'en';
   e.waitUntil(self.registration.showNotification(d.title || (ar ? 'فَلَق' : 'Falaq'), {
     body: d.body || '', tag: d.tag || 'falaq', lang: ar ? 'ar' : 'en', dir: ar ? 'rtl' : 'ltr',
-    icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: './' }
+    icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './' }
   }));
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || './';
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-    for (const c of list) if ('focus' in c) return c.focus();
-    return self.clients.openWindow('./');
+    for (const c of list) if ('focus' in c) { if (url !== './' && 'navigate' in c) c.navigate(url); return c.focus(); }
+    return self.clients.openWindow(url);
   }));
 });

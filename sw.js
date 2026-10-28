@@ -1,6 +1,6 @@
 /* فَلَق — يعمل بدون إنترنت. غيّر رقم الإصدار مع كل تحديث */
-const VERSION = 'falaq-1.6';
-const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'manifest.webmanifest',
+const VERSION = 'falaq-1.7';
+const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'wamd-push.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {
@@ -30,7 +30,7 @@ self.addEventListener('fetch', e => {
   }).catch(() => caches.match('index.html'))));
 });
 
-/* إشعارات الأذان: نص فقط بدون صوت أذان */
+/* الإشعارات: الأذان والأخبار والمعايدات (بنغمة الجوال الافتراضية) */
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data ? e.data.text() : '' }; }

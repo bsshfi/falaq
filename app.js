@@ -1,9 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.6';
-  // رابط خادم الإشعارات (Cloudflare Worker) — ضع رابطك هنا بعد إنشائه
-  const PUSH_API = 'https://falaq-push.bsshfi.workers.dev';
+  const VERSION = '1.7';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -14,7 +12,7 @@
     method: 'umm_alqura', asr: 1, h24: false, digits: 'latn',
     adjust: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
     compassOffset: 0,
-    notify: { on: false, prayers: { fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true } },
+    notify: { on: false, news: true, prayers: { fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true } },
     loc: { lat: 24.7136, lng: 46.6753, city: 0, tz: 'Asia/Riyadh', source: 'default' },
     installSeen: false
   };
@@ -703,74 +701,70 @@
     $('#aboutVer').textContent = L('aboutVer', num(VERSION));
   }
 
-  /* ---------- إشعارات الأذان ---------- */
-  const pushReady = () => !!PUSH_API && !/YOUR-SUBDOMAIN/.test(PUSH_API);
-  const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  /* ---------- الإشعارات (عبر wamd-push.js المشترك مع سهم وخُطى) ---------- */
+  const P = window.WamdPush;
   function ntfStatus() {
-    if (!pushReady()) return 'noServer';
-    if (isIOS() && !isStandalone()) return 'needInstall';
-    if (!pushSupported()) return 'unsupported';
-    if (Notification.permission === 'denied') return 'blocked';
-    return 'ok';
+    const st = P.status();
+    return st === 'granted' || st === 'default' ? 'ok' : st;
   }
-  const keyBytes = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
+  const falaqCfg = () => ({ lat: S.loc.lat, lng: S.loc.lng, tz: TZ(), method: S.method, asr: S.asr, adjust: S.adjust, prayers: S.notify.prayers, lang: S.lang, prefs: { news: S.notify.news !== false } });
   let ntfBusy = false;
   function renderNotify() {
     const box = $('#ntfSet'); if (!box) return;
-    const st = ntfStatus(), on = S.notify.on && st === 'ok';
+    const st = ntfStatus(), on = S.notify.on && st === 'ok' && P.status() === 'granted';
+    const sw = (k, lbl, val) => '<div><span class="lbl">' + lbl + '</span><button class="switch" role="switch" data-k="' + k + '" aria-checked="' + !!val + '" aria-label="' + lbl + '"></button></div>';
     let html = '<div><span class="lbl">' + L('ntfOn') + '</span><button class="switch" id="ntfToggle" role="switch" aria-checked="' + on + '" aria-label="' + L('ntfOn') + '"' + (ntfBusy ? ' disabled' : '') + '></button></div>';
-    if (on) KEYS.forEach(k => {
-      html += '<div><span class="lbl">' + D.prayers[k] + '</span><button class="switch" role="switch" data-k="' + k + '" aria-checked="' + !!S.notify.prayers[k] + '" aria-label="' + D.prayers[k] + '"></button></div>';
-    });
+    if (on) {
+      KEYS.forEach(k => { html += sw(k, D.prayers[k], S.notify.prayers[k]); });
+      html += sw('news', L('ntfNews'), S.notify.news !== false);
+    }
     box.innerHTML = html;
     $('#ntfNote').textContent = ntfBusy ? L('ntfWorking') : st === 'ok' ? L(on ? 'ntfOnNote' : 'ntfOffNote') :
-      L({ noServer: 'ntfNoServer', needInstall: 'ntfNeedInstall', unsupported: 'ntfUnsupported', blocked: 'ntfBlocked' }[st]);
+      L({ needInstall: 'ntfNeedInstall', unsupported: 'ntfUnsupported', blocked: 'ntfBlocked' }[st]);
     $('#ntfToggle').onclick = () => {
       if (st === 'needInstall') { openInstall(); return; }
       if (st !== 'ok') { toast($('#ntfNote').textContent); return; }
       if (on) ntfDisable(); else ntfEnable();
     };
     box.querySelectorAll('.switch[data-k]').forEach(b => b.onclick = () => {
-      S.notify.prayers[b.dataset.k] = !S.notify.prayers[b.dataset.k]; save(); renderNotify();
+      const k = b.dataset.k;
+      if (k === 'news') S.notify.news = S.notify.news === false; else S.notify.prayers[k] = !S.notify.prayers[k];
+      save(); renderNotify();
     });
   }
-  async function pushSubscribe(test) {
-    const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      const k = await (await fetch(PUSH_API + '/vapid')).json();
-      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(k.key) });
-    }
-    const cfg = { lat: S.loc.lat, lng: S.loc.lng, tz: TZ(), method: S.method, asr: S.asr, adjust: S.adjust, prayers: S.notify.prayers, lang: S.lang };
-    const r = await fetch(PUSH_API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sub: sub.toJSON(), cfg, test: !!test }) });
-    if (!r.ok) throw new Error('server ' + r.status);
-    return r.json();
-  }
-  function ntfEnable() {
-    // طلب الإذن يجب أن يكون مباشرة بعد ضغطة المستخدم
-    const ask = Notification.permission === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
+  // after: دالة تُنفّذ بعد انتهاء طلب الإذن (مثل طلب الموقع في بطاقة الترحيب)
+  function ntfEnable(after) {
+    const ask = P.request();          // مباشرة داخل الضغطة
     ntfBusy = true; renderNotify();
-    Promise.resolve(ask).then(perm => {
-      if (perm !== 'granted') { toast(L('ntfDenied')); return; }
-      return pushSubscribe(true).then(() => { S.notify.on = true; save(); toast(L('ntfOnToast')); });
-    }).catch(() => toast(L('ntfFail'))).finally(() => { ntfBusy = false; renderNotify(); });
+    return ask.then(perm => {
+      if (perm !== 'granted') { if (!after) toast(L('ntfDenied')); return; }
+      return P.subscribe('falaq', falaqCfg(), true).then(() => { S.notify.on = true; save(); toast(L('ntfOnToast')); });
+    }).catch(() => toast(L('ntfFail'))).finally(() => { ntfBusy = false; renderNotify(); if (after) after(); });
   }
-  async function ntfDisable() {
+  function ntfDisable() {
     S.notify.on = false; save(); renderNotify(); toast(L('ntfOffToast'));
-    try {
-      const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        fetch(PUSH_API + '/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {});
-        await sub.unsubscribe();
-      }
-    } catch (e) {}
+    P.unsubscribe();
   }
-  // مزامنة الإعدادات (الموقع، الطريقة، التعديلات، اللغة) مع الخادم
-  let syncT;
   function pushSync() {
-    try { if (!S.notify.on || ntfBusy || ntfStatus() !== 'ok' || Notification.permission !== 'granted') return; } catch (e) { return; }
-    clearTimeout(syncT);
-    syncT = setTimeout(() => { pushSubscribe(false).catch(() => {}); }, 1500);
+    try { if (!S.notify.on || ntfBusy || P.status() !== 'granted') return; } catch (e) { return; }
+    P.sync('falaq', falaqCfg);
+  }
+  // بطاقة الترحيب: أول فتح من الشاشة الرئيسية (وللمستخدمين الحاليين مرة بعد التحديث)
+  function maybeWelcome() {
+    if (!isStandalone() || S.notify.on || !P.shouldAsk(S)) return;
+    setTimeout(() => {
+      if ($('#sheetBg').classList.contains('on')) return;
+      const needLoc = S.loc.source === 'default';
+      sheet('<div class="welcome"><img src="icons/icon-192.png" alt="" width="72" height="72"><h2>' + L('wlTitle') + '</h2><p>' + L(needLoc ? 'wlTextLoc' : 'wlText') + '</p></div>' +
+        '<button class="link-btn primary" id="wlGo">' + L('wlGo') + '</button><button class="link-btn" id="wlLater">' + L('later') + '</button>', () => {
+        $('#wlGo').onclick = () => {
+          P.markAsked(S); save();
+          closeSheet();
+          ntfEnable(() => { if (needLoc) useGPS(false); });
+        };
+        $('#wlLater').onclick = () => { P.markAsked(S); save(); closeSheet(); };
+      });
+    }, 900);
   }
 
   /* ---------- الموقع ---------- */
@@ -1009,6 +1003,7 @@
   renderAll();
   checkLocation();
   pushSync();
+  maybeWelcome();
   let browsing = false; try { browsing = sessionStorage.getItem('falaq-browse') === '1'; } catch (e) {}
   if (!isStandalone() && gateSupported() && !browsing) openGate();
 

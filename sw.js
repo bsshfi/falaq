@@ -1,6 +1,6 @@
 /* فَلَق — يعمل بدون إنترنت. غيّر رقم الإصدار مع كل تحديث */
-const VERSION = 'falaq-1.8';
-const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'wamd-push.js', 'manifest.webmanifest',
+const VERSION = 'falaq-1.9';
+const SHELL = ['./', 'index.html', 'app.js', 'astro.js', 'i18n.js', 'azkar.js', 'wamd-push.js', 'wamd-stats.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

@@ -245,4 +245,17 @@
       }
     }
   };
+  /* 2.0: نصوص الواجهة الجديدة */
+  Object.assign(root.I18N.ar.s, {
+    tagline: 'السماء أقرب', pQibla: 'اتجاه القبلة', pAzkar: 'أذكار المسلم', pMoon: 'القمر والنجوم', pSettings: 'الإعدادات',
+    today: 'اليوم', nextPrayer: 'الصلاة القادمة', adhanAt: t => 'الأذان <b>' + t + '</b>', remaining: 'الوقت المتبقي',
+    todayTimes: 'مواقيت اليوم', dayTimes: d => 'مواقيت ' + d, dayLen: 'طول النهار', lastThirdS: 'الثلث الأخير',
+    kaaba: 'الكعبة المشرفة', kmUnit: 'كم', upNext: 'التالي', hrs: 'ساعة', yourLoc: 'موقعك', dayView: 'يوم', dayHM: (h, m) => h + 'س ' + m + 'د'
+  });
+  Object.assign(root.I18N.en.s, {
+    tagline: 'The sky, closer', pQibla: 'Qibla direction', pAzkar: 'Daily adhkar', pMoon: 'Moon & stars', pSettings: 'Settings',
+    today: 'Today', nextPrayer: 'Next prayer', adhanAt: t => 'Adhan <b>' + t + '</b>', remaining: 'Time left',
+    todayTimes: "Today's times", dayTimes: d => d + ' times', dayLen: 'Daylight', lastThirdS: 'Last third',
+    kaaba: 'The Kaaba', kmUnit: 'km', upNext: 'Up next', hrs: 'h', yourLoc: 'Your location', dayView: 'Day', dayHM: (h, m) => h + 'h ' + m + 'm'
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

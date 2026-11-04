@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '1.9';
+  const VERSION = '2.0';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -119,7 +119,7 @@
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', S.theme);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', cssVar('--night'));
+    if (meta) meta.setAttribute('content', cssVar('--sky1'));
   }
   function applyLang() {
     D = window.I18N[S.lang === 'en' ? 'en' : 'ar'];
@@ -177,100 +177,132 @@
   const el = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
   const polar = (a, r) => [r * Math.sin(a * Math.PI / 180), -r * Math.cos(a * Math.PI / 180)];
 
+  /* أيقونات الأوقات */
+  const SVG32 = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  const PICON = {
+    fajr: SVG32 + '<path d="M3 24h26"/><path d="M9.5 24a6.5 6.5 0 0 1 13 0" stroke-dasharray="2.2 3"/><path d="M23 5.5l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="currentColor" stroke="none"/><circle cx="8" cy="9" r="1" fill="currentColor" stroke="none"/></svg>',
+    sunrise: SVG32 + '<path d="M3 24h26"/><path d="M9.5 24a6.5 6.5 0 0 1 13 0"/><path d="M16 9v3.5M7.2 13.2l2.4 2.4M24.8 13.2l-2.4 2.4"/><path d="M13 5.5l3-2.5 3 2.5"/></svg>',
+    dhuhr: SVG32 + '<circle cx="16" cy="16" r="5.5"/><path d="M16 4v3M16 25v3M4 16h3M25 16h3M7.5 7.5l2.1 2.1M22.4 22.4l2.1 2.1M7.5 24.5l2.1-2.1M22.4 9.6l2.1-2.1"/></svg>',
+    asr: SVG32 + '<circle cx="19" cy="13" r="5"/><path d="M19 3.5v2.5M28.5 13H26M25.7 6.3l-1.8 1.8M12.3 6.3l1.8 1.8M25.7 19.7l-1.8-1.8"/><path d="M3 27h26"/><path d="M6 27l7-6" stroke-dasharray="2 2.5"/></svg>',
+    maghrib: SVG32 + '<path d="M3 21h26"/><path d="M9.5 21a6.5 6.5 0 0 1 13 0"/><path d="M8 25.5h16M11 29h10"/><path d="M13 5l3 2.5L19 5" /><path d="M16 7.5V2.5"/></svg>',
+    isha: SVG32 + '<path d="M22 21.5A9.5 9.5 0 0 1 11.5 6a10 10 0 1 0 10.5 15.5z"/><path d="M23.5 5l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8z" fill="currentColor" stroke="none"/></svg>',
+    mid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></svg>',
+    third: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 3.6L17 8.2l-3.4 1.6L12 13.4l-1.6-3.6L7 8.2l3.4-1.6z"/><path d="M18 14l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8z"/><path d="M6 15l.6 1.3 1.3.6-1.3.6L6 18.8l-.6-1.3-1.3-.6 1.3-.6z"/></svg>',
+    daylen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3.5"/><path d="M12 3v1.5M5 10h1.5M17.5 10H19M7 5l1 1M17 5l-1 1"/><path d="M3 18h18M6 15.5 3 18l3 2.5M18 15.5l3 2.5-3 2.5"/></svg>',
+    cal: SVG32 + '<rect x="5" y="7" width="22" height="20" rx="4"/><path d="M5 13h22M11 4v5M21 4v5"/></svg>'
+  };
+  const ampm = d => S.h24 || !d ? '' : '<small>' + (parts(d).h < 12 ? D.am : D.pm) + '</small>';
+  const timeHTML = d => d ? fmtTime(d, { short: true }) + ampm(d) : '—';
+
   function renderPrayer() {
     const now = new Date();
     const ymd = ymdAdd(todayYMD(), dayOffset);
     const T = timesFor(ymd), Tn = timesFor(ymdAdd(ymd, 1));
     const isToday = dayOffset === 0;
 
-    $('#hijriDate').textContent = hijriStr(hijriOf(ymd));
-    $('#gregDate').textContent = ymdStr(ymd, true);
+    $('#gregDate').textContent = ymdStr(ymd);
     $('#todayBtn').classList.toggle('show', !isToday);
+    $('#timesTitle').textContent = isToday ? L('todayTimes') : L('dayTimes', wdOf(ymd));
 
     const nxt = nextEvent(now);
-    const list = $('#timesList'); list.innerHTML = '';
-    KEYS.forEach(k => {
-      const li = document.createElement('li');
-      li.innerHTML = '<span class="n">' + pName(k, ymd) + '</span><span class="v">' + fmtTime(T[k]) + '</span>';
-      if (isToday) { if (nxt && nxt.key === k && nxt.ymd.d === ymd.d) li.className = 'next'; else if (T[k] && T[k] < now) li.className = 'past'; }
-      list.appendChild(li);
-    });
-    const night = Tn.fajr - T.maghrib;
-    const s = document.createElement('li'); s.className = 'sep'; s.style.borderBottom = '0'; list.appendChild(s);
-    [[L('midnight'), night / 2], [L('lastThird'), night * 2 / 3]].forEach(([n, off]) => {
-      const li = document.createElement('li'); li.className = 'minor';
-      li.innerHTML = '<span class="n">' + n + '</span><span class="v">' + fmtTime(new Date(T.maghrib.valueOf() + off)) + '</span>';
-      list.appendChild(li);
-    });
+    $('#timesList').innerHTML = KEYS.map(k => {
+      let cls = 'pt';
+      if (isToday) { if (nxt && nxt.key === k && nxt.ymd.d === ymd.d) cls += ' next'; else if (T[k] && T[k] < now) cls += ' past'; }
+      return '<li class="' + cls + '">' + PICON[k] + '<span class="n">' + pName(k, ymd) + '</span><span class="v">' + timeHTML(T[k]) + '</span></li>';
+    }).join('');
+
+    const night = Tn.fajr - T.maghrib, day = T.maghrib - T.sunrise;
+    const dmin = Math.round(day / 6e4);
+    $('#minis').innerHTML = [
+      [PICON.mid, L('midnight'), timeHTML(new Date(T.maghrib.valueOf() + night / 2))],
+      [PICON.third, L('lastThirdS'), timeHTML(new Date(T.maghrib.valueOf() + night * 2 / 3))],
+      [PICON.daylen, L('dayLen'), num(Math.floor(dmin / 60) + ':' + pad(dmin % 60)) + '<small>' + L('hrs') + '</small>']
+    ].map(([ic, l, v]) => '<div class="mini">' + ic + '<small>' + l + '</small><b>' + v + '</b></div>').join('');
 
     drawDial(T, ymd, isToday, now);
     renderCenter();
   }
 
+  // شريط اليوم: من منتصف الليل إلى منتصف الليل بلون السماء، والوقت الحالي عليه
   function drawDial(T, ymd, isToday, now) {
     const svg = $('#dial'); svg.innerHTML = '';
-    const noon = T.solarNoon.valueOf(), R = 116, bg = cssVar('--night');
-    const ang = t => (t - noon) / DAY * 360;
-    // توهج داخلي خفيف داخل القرص
-    const di = cssVar('--dial-in') || '120,86,180';
-    const defs = el('defs', {}, svg), rg = el('radialGradient', { id: 'dialIn', cx: '50%', cy: '50%', r: '50%' }, defs);
-    el('stop', { offset: '55%', 'stop-color': 'rgb(' + di + ')', 'stop-opacity': 0 }, rg);
-    el('stop', { offset: '88%', 'stop-color': 'rgb(' + di + ')', 'stop-opacity': .16 }, rg);
-    el('stop', { offset: '100%', 'stop-color': 'rgb(' + di + ')', 'stop-opacity': .34 }, rg);
-    el('circle', { r: R - 9, fill: 'url(#dialIn)' }, svg);
-    const N = 144;
+    const m0 = localMidnight(ymd), X0 = 8, W = 324, Y = 14, H = 12, rtl = !isEn();
+    const X = t => { const f = Math.max(0, Math.min(1, (t - m0) / DAY)); return rtl ? X0 + W - f * W : X0 + f * W; };
+    const defs = el('defs', {}, svg), cp = el('clipPath', { id: 'dlClip' }, defs);
+    el('rect', { x: X0, y: Y, width: W, height: H, rx: H / 2 }, cp);
+    const g = el('g', { 'clip-path': 'url(#dlClip)' }, svg);
+    const N = 96;
     for (let i = 0; i < N; i++) {
-      const t0 = noon - DAY / 2 + i * DAY / N, t1 = t0 + DAY / N;
+      const t0 = m0 + i * DAY / N, t1 = t0 + DAY / N;
       const alt = A.sunPos(new Date((t0 + t1) / 2), S.loc.lat, S.loc.lng).altitude;
-      const [x0, y0] = polar(ang(t0) - 0.3, R), [x1, y1] = polar(ang(t1) + 0.3, R);
-      el('path', { d: `M${x0} ${y0} A${R} ${R} 0 0 1 ${x1} ${y1}`, stroke: skyColor(alt), 'stroke-width': 18, fill: 'none' }, svg);
+      const xa = X(t0), xb = X(t1);
+      el('rect', { x: Math.min(xa, xb) - 0.4, y: Y, width: Math.abs(xb - xa) + 0.8, height: H, fill: skyColor(alt) }, g);
     }
-    if (T.sunrise && T.maghrib) {
-      const [ax, ay] = polar(ang(T.sunrise.valueOf()), R - 13), [bx, by] = polar(ang(T.maghrib.valueOf()), R - 13);
-      el('line', { x1: ax, y1: ay, x2: bx, y2: by, stroke: ink(.25), 'stroke-width': 1, 'stroke-dasharray': '2 5' }, svg);
-    }
-    const mid0 = localMidnight(ymd);
-    for (let hr = 0; hr < 24; hr++) {
-      const a = ang(mid0 + hr * 36e5);
-      const [x0, y0] = polar(a, R + 11), [x1, y1] = polar(a, R + (hr % 6 === 0 ? 16 : 13));
-      el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: hr % 6 === 0 ? ink(.45) : ink(.18), 'stroke-width': 1 }, svg);
-    }
+    const nxt = isToday ? nextEvent(now) : null;
     KEYS.forEach(k => {
       if (!T[k]) return;
-      const a = ang(T[k].valueOf());
-      const [x0, y0] = polar(a, R - 9), [x1, y1] = polar(a, R + 9);
-      el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: bg, 'stroke-width': 3 }, svg);
-      el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: 'rgba(237,231,218,.95)', 'stroke-width': 1.2 }, svg);
-      const [x, y] = polar(a, R + 22);
-      const anchor = x > 20 ? 'start' : x < -20 ? 'end' : 'middle';
-      el('text', { x, y: y + 4 + (anchor === 'middle' ? (y < 0 ? -6 : 8) : 0), 'text-anchor': anchor, fill: ink(.75), 'font-size': isEn() ? 11 : 11.5, 'font-family': 'IBM Plex Sans Arabic, system-ui' }, svg).textContent = D.prayers[k];
+      const x = X(T[k].valueOf()), isN = nxt && nxt.key === k && nxt.ymd.d === ymd.d;
+      el('line', { x1: x, y1: Y - 1, x2: x, y2: Y + H + 1, stroke: 'rgba(255,255,255,.95)', 'stroke-width': isN ? 2.4 : 1.4 }, svg);
+      if (isN) el('path', { d: `M${x - 5} ${Y - 9} L${x + 5} ${Y - 9} L${x} ${Y - 3} Z`, fill: cssVar('--arrow') }, svg);
+    });
+    [0, 6, 12, 18, 24].forEach(hr => {
+      const x = X(m0 + hr * 36e5), h12 = hr % 12 || 12;
+      const lbl = S.h24 ? num(pad(hr % 24)) : num(h12) + ' ' + (hr % 24 < 12 ? D.am : D.pm);
+      el('text', { x, y: Y + H + 17, 'text-anchor': hr === 0 ? (rtl ? 'end' : 'start') : hr === 24 ? (rtl ? 'start' : 'end') : 'middle', fill: ink(.45), 'font-size': 10, 'font-family': 'IBM Plex Sans Arabic, system-ui' }, svg).textContent = lbl;
     });
     if (isToday) {
-      const a = ang(now.valueOf());
+      const x = X(now.valueOf()), cy = Y + H / 2;
       const alt = A.sunPos(now, S.loc.lat, S.loc.lng).altitude;
-      const [x, y] = polar(a, R);
       if (alt > -0.83) {
-        el('circle', { cx: x, cy: y, r: 17, fill: 'rgba(240,194,106,.22)' }, svg);
-        el('circle', { cx: x, cy: y, r: 9.5, fill: '#F6D48A', stroke: bg, 'stroke-width': 2.5 }, svg);
+        el('circle', { cx: x, cy, r: 13, fill: 'rgba(255,190,90,.3)' }, svg);
+        el('circle', { cx: x, cy, r: 8, fill: '#FFC65C', stroke: '#fff', 'stroke-width': 2.5 }, svg);
       } else {
-        el('circle', { cx: x, cy: y, r: 9, fill: '#E9E4D8', stroke: bg, 'stroke-width': 2.5 }, svg);
-        el('circle', { cx: x + 4, cy: y - 3, r: 7, fill: skyColor(alt) }, svg);
+        el('circle', { cx: x, cy, r: 8, fill: '#ECE6D6', stroke: '#fff', 'stroke-width': 2.5 }, svg);
+        el('circle', { cx: x + (rtl ? -3.5 : 3.5), cy: cy - 2.5, r: 5.5, fill: skyColor(alt) }, svg);
       }
     }
   }
   function localMidnight(ymd) { const t = Date.UTC(ymd.y, ymd.m - 1, ymd.d); return t - tzOffsetMin(new Date(t + 12 * 36e5), TZ()) * 6e4; }
 
+  // البطاقة الكبيرة: الصلاة القادمة والعد التنازلي (أو اليوم المختار)
   function renderCenter() {
-    const c = $('#dialCenter');
+    const cd = $('#hCd'), cl = $('#hCdLbl');
     if (dayOffset !== 0) {
       const ymd = ymdAdd(todayYMD(), dayOffset);
-      c.innerHTML = '<div class="name">' + wdOf(ymd) + '</div><div class="k">' + (dayOffset > 0 ? L('inTime', durTxt(dayOffset * DAY)) : L('agoTime', durTxt(-dayOffset * DAY))) + '</div>';
+      $('#hIcon').innerHTML = PICON.cal;
+      $('#hLbl').textContent = hijriStr(hijriOf(ymd));
+      $('#hName').textContent = wdOf(ymd);
+      $('#hAt').textContent = dm(ymd.d, ymd.m, ymd.y);
+      cd.textContent = '';
+      cl.textContent = dayOffset > 0 ? L('inTime', durTxt(dayOffset * DAY)) : L('agoTime', durTxt(-dayOffset * DAY));
       return;
     }
     const now = new Date(), n = nextEvent(now);
-    if (!n) { c.innerHTML = ''; return; }
-    const ymd = todayYMD();
-    c.innerHTML = '<div class="name">' + pName(n.key, n.ymd) + '</div><div class="t">' + fmtTime(n.time) + (n.ymd.d !== ymd.d ? L('tomorrow') : '') + '</div><div class="cd">' + countdown(n.time - now) + '</div>';
+    if (!n) return;
+    const tm = fmtTime(n.time) + (n.ymd.d !== todayYMD().d ? L('tomorrow') : '');
+    if ($('#hIcon').dataset.k !== n.key) { $('#hIcon').innerHTML = PICON[n.key]; $('#hIcon').dataset.k = n.key; }
+    $('#hLbl').textContent = L(n.key === 'sunrise' ? 'upNext' : 'nextPrayer');
+    $('#hName').textContent = pName(n.key, n.ymd);
+    $('#hAt').innerHTML = n.key === 'sunrise' ? '<b>' + tm + '</b>' : L('adhanAt', tm);
+    cd.textContent = countdown(n.time - now);
+    cl.textContent = L('remaining');
+  }
+
+  /* الرأس: القمر الصغير والتاريخ الهجري */
+  function moonPath(k, waxing, r) {
+    if (k < 0.02) return '';
+    if (k > 0.98) return '<circle r="' + r + '" fill="url(#mmLit)"/>';
+    const rx = (Math.abs(2 * k - 1) * r).toFixed(2);
+    return '<path fill="url(#mmLit)"' + (waxing ? '' : ' transform="scale(-1,1)"') + ' d="M0 ' + -r + ' A' + r + ' ' + r + ' 0 0 1 0 ' + r + ' A' + rx + ' ' + r + ' 0 0 ' + (k > 0.5 ? 1 : 0) + ' 0 ' + -r + 'Z"/>';
+  }
+  function renderHead() {
+    const h = hijriOf(todayYMD());
+    $('#hjTop').textContent = h ? num(h.day) + ' ' + D.hMonths[h.month - 1] : '';
+    $('#hjYear').textContent = h ? num(h.year) + ' ' + D.ah : '';
+    const il = A.moonIllumination(new Date());
+    $('#moonMini').innerHTML = '<defs><radialGradient id="mmLit" cx="40%" cy="38%" r="70%"><stop offset="0" stop-color="#FBF6EA"/><stop offset=".7" stop-color="#E9E1CF"/><stop offset="1" stop-color="#CFC6B2"/></radialGradient></defs>' +
+      '<circle r="12" fill="#2B3247" fill-opacity=".88"/>' + moonPath(il.fraction, il.waxing, 12);
+    $('#ptitle').textContent = L({ prayer: 'tagline', qibla: 'pQibla', azkar: 'pAzkar', moon: 'pMoon', settings: 'pSettings' }[current] || 'tagline');
   }
 
   function openMonth() {
@@ -296,28 +328,31 @@
   const qiblaInfo = () => A.qibla(S.loc.lat, S.loc.lng);
   function buildCompass() {
     const svg = $('#compass'); svg.innerHTML = '';
-    const gold = cssVar('--gold');
-    el('circle', { r: 160, fill: 'none', stroke: 'transparent', 'stroke-width': 3, id: 'cAlign' }, svg);
+    const orange = cssVar('--arrow') || '#f5841f';
+    el('circle', { r: 163, fill: 'none', stroke: 'transparent', 'stroke-width': 4, id: 'cAlign' }, svg);
     const rose = el('g', { id: 'rose' }, svg);
-    el('circle', { r: 150, fill: cssVar('--night-2'), stroke: ink(.14), 'stroke-width': 1 }, rose);
     for (let a = 0; a < 360; a += 5) {
       const long = a % 30 === 0;
-      const [x0, y0] = polar(a, 150 - (long ? 14 : 7)), [x1, y1] = polar(a, 148);
-      el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: long ? ink(.6) : ink(.2), 'stroke-width': long ? 1.4 : 1 }, rose);
+      const [x0, y0] = polar(a, 148 - (long ? 16 : 8)), [x1, y1] = polar(a, 148);
+      el('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: long ? ink(.5) : ink(.2), 'stroke-width': long ? 2.4 : 1.2, 'stroke-linecap': 'round' }, rose);
     }
     D.cardinals.forEach((t, i) => {
-      const a = i * 90, [x, y] = polar(a, 117);
-      el('text', { x, y: y + 7, 'text-anchor': 'middle', fill: a === 0 ? cssVar('--rose') : ink(.8), 'font-size': 20, 'font-family': 'IBM Plex Sans Arabic, system-ui', 'font-weight': 600, class: 'upright' }, rose).textContent = t;
+      const a = i * 90, [x, y] = polar(a, 112);
+      el('text', { x, y: y + 7, 'text-anchor': 'middle', fill: a === 0 ? orange : ink(.7), 'font-size': 21, 'font-family': 'IBM Plex Sans Arabic, system-ui', 'font-weight': 700, class: 'upright' }, rose).textContent = t;
     });
+    el('circle', { r: 64, fill: 'rgba(255,255,255,.12)', stroke: 'rgba(255,255,255,.55)', 'stroke-width': 1.2 }, rose);
     const q = qiblaInfo().bearing;
-    const [qx, qy] = polar(q, 128);
-    el('line', { x1: 0, y1: 0, x2: qx, y2: qy, stroke: gold, 'stroke-width': 2.5, 'stroke-linecap': 'round' }, rose);
+    // السهم البرتقالي يشير إلى الكعبة
+    const ng = el('g', { transform: 'rotate(' + q + ')' }, rose);
+    el('path', { d: 'M0 -104 L-28 30 L0 14 Z', fill: '#FF9A3C' }, ng);
+    el('path', { d: 'M0 -104 L28 30 L0 14 Z', fill: '#D9620C' }, ng);
+    el('circle', { r: 10, fill: '#fff', stroke: orange, 'stroke-width': 4 }, ng);
+    const [qx, qy] = polar(q, 132);
     const kg = el('g', { class: 'upright', 'data-x': qx, 'data-y': qy }, rose);
-    el('rect', { x: qx - 13, y: qy - 13, width: 26, height: 26, rx: 3, fill: '#0F1830', stroke: gold, 'stroke-width': 2 }, kg);
-    el('rect', { x: qx - 13, y: qy - 6, width: 26, height: 4, fill: gold }, kg);
-    el('circle', { r: 5, fill: gold }, rose);
+    el('rect', { x: qx - 12, y: qy - 12, width: 24, height: 24, rx: 3.5, fill: '#1F2228', stroke: '#fff', 'stroke-width': 1.5 }, kg);
+    el('rect', { x: qx - 12, y: qy - 6, width: 24, height: 4, fill: '#D9A441' }, kg);
     el('g', { id: 'skyMarks' }, rose);
-    el('path', { d: 'M0 -168 L-9 -152 L9 -152 Z', fill: cssVar('--text') }, svg);
+    el('rect', { x: -7, y: -172, width: 14, height: 14, rx: 3, fill: orange, transform: 'rotate(45 0 -165)' }, svg);
     updateSkyMarks();
     renderCompass();
   }
@@ -349,7 +384,9 @@
       n.setAttribute('transform', 'rotate(' + hd + ' ' + x + ' ' + y + ')');
     });
     $('#qBearing').textContent = deg(q.bearing);
-    $('#qDist').textContent = num(Math.round(q.distance).toLocaleString('en-US')) + L('km');
+    $('#qDist').textContent = num(Math.round(q.distance).toLocaleString('en-US'));
+    $('#qDir').textContent = deg(q.bearing) + ' ' + dirOf(q.bearing);
+    $('#qLoc').textContent = S.loc.source === 'default' ? cityName(0) : locLabel();
     $('#qHeading').textContent = heading === null ? '—' : deg(hd);
     const st = $('#qStatus');
     if (heading === null) {
@@ -362,7 +399,7 @@
     st.className = 'q-status' + (aligned ? ' aligned' : '');
     st.innerHTML = aligned ? '<div class="big">' + L('aligned') + '</div><div class="small">' + L('holdSteady') + '</div>'
       : '<div class="big">' + L('turn', diff > 0, deg(Math.abs(diff))) + '</div><div class="small">' + L('untilKaaba') + '</div>';
-    $('#cAlign').setAttribute('stroke', aligned ? cssVar('--gold') : 'transparent');
+    $('#cAlign').setAttribute('stroke', aligned ? cssVar('--arrow') : 'transparent');
     if (aligned && !wasAligned && navigator.vibrate) navigator.vibrate(30);
     wasAligned = aligned;
   }
@@ -943,12 +980,13 @@
     if (v === 'moon') renderMoon();
     if (v === 'azkar') renderAzkar();
     if (v === 'settings') renderSettings();
+    renderHead();
     window.scrollTo(0, 0);
   }
   document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => show(b.dataset.v));
 
   function renderAll() {
-    renderLoc(); setGlow(); renderPrayer(); renderSettings();
+    renderLoc(); renderHead(); renderPrayer(); renderSettings();
     if (current === 'moon') renderMoon();
     if (current === 'azkar') renderAzkar();
     if (current === 'qibla') { renderSunQibla(); updateSkyMarks(); renderCompass(); }
@@ -958,6 +996,7 @@
   $('#dayNext').onclick = () => { dayOffset++; renderPrayer(); };
   $('#todayBtn').onclick = () => { dayOffset = 0; renderPrayer(); };
   $('#monthBtn').onclick = openMonth;
+  $('#moonBtn').onclick = () => show('moon');
   $('#locBtn').onclick = openLocation;
   $('#locBannerBtn').onclick = () => useGPS(false);
   $('#setGps').onclick = () => useGPS(false);
@@ -977,8 +1016,8 @@
 
   // سحب للتنقل بين الأيام: في العربية السحب يميناً = اليوم التالي
   let tx = null;
-  $('.dial-wrap').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
-  $('.dial-wrap').addEventListener('touchend', e => {
+  $('#hero').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  $('#hero').addEventListener('touchend', e => {
     if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null;
     if (Math.abs(dx) > 50) { dayOffset += (dx > 0) === !isEn() ? 1 : -1; renderPrayer(); }
   });
@@ -996,7 +1035,7 @@
     if (p.mi !== lastMinute) {
       lastMinute = p.mi;
       const dk = p.y + '-' + p.m + '-' + p.d;
-      setGlow();
+      renderHead();
       if (current === 'prayer') renderPrayer();
       if (current === 'qibla') updateSkyMarks();
       if (current === 'moon' && (p.mi % 5 === 0 || dk !== lastDay)) renderMoon();

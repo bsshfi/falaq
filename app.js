@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '2.0';
+  const VERSION = '2.0.1';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;

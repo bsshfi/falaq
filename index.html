@@ -109,7 +109,6 @@ a{color:var(--accent)}
 @media (prefers-color-scheme:dark){:root[data-theme="auto"] .chip{background:var(--panel);border-color:var(--line);color:var(--fg)}}
 .chip span{overflow:hidden;text-overflow:ellipsis}
 .chip svg{flex:none;opacity:.75}
-#locBtn{flex:0 1 auto;max-width:46%}
 .datechip{flex:1;justify-content:space-between;padding:0 4px}
 .datechip>span{flex:1;text-align:center;font-size:13px}
 .datechip button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none}
@@ -273,8 +272,11 @@ select option{background:var(--sheet);color:var(--fg)}
 /* عن التطبيق */
 .about{text-align:center;padding:26px 0 8px;color:var(--dim);font-size:13px}
 .about .ver{color:var(--fg);font-size:16px;font-weight:700;margin-bottom:4px}
-.wamd{display:block;margin:22px auto 0;max-width:240px;text-decoration:none;color:var(--fg)}
-.wamd svg{width:100%;height:auto;display:block;overflow:visible}
+.wamd{display:block;margin:22px auto 0;max-width:165px;text-decoration:none;color:var(--fg)}
+.wamd img{width:100%;height:auto;display:block}
+.wamd .wd{display:none}
+:root[data-theme="dark"] .wamd .wl{display:none}:root[data-theme="dark"] .wamd .wd{display:block}
+@media (prefers-color-scheme:dark){:root[data-theme="auto"] .wamd .wl{display:none}:root[data-theme="auto"] .wamd .wd{display:block}}
 .wamd .tag{display:block;font-size:13px;color:var(--dim);margin-top:4px}
 .wamd .dom{display:block;font-family:Montserrat,system-ui,sans-serif;font-weight:300;font-size:11px;letter-spacing:.24em;color:var(--faint);margin-top:2px;direction:ltr}
 
@@ -372,6 +374,54 @@ body.gated .tabs{display:none}
 .field input{flex:1;min-width:0;font:inherit;color:var(--fg);background:var(--night-3);border:1px solid var(--line-2);border-radius:14px;padding:12px;font-size:16px;direction:ltr;text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--safe-b) + 92px);background:var(--toast-bg);color:var(--toast-fg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;max-width:calc(100% - 40px);text-align:center;box-shadow:0 8px 20px rgba(0,0,0,.18)}
 .toast.on{opacity:1}
+
+/* 2.1: الموقع تحت الشعار، التاريخان، الوقت المنقضي بعد الأذان، حول التطبيق */
+.ploc{display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:3px 10px 3px 8px;border-radius:999px;background:rgba(255,255,255,.26);border:1px solid rgba(255,255,255,.5);color:#fff;font-size:12.5px;font-weight:600;max-width:52vw}
+.ploc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ploc .chev{opacity:.8;transform:none!important}
+.datechip{width:100%;height:auto;min-height:44px}
+.dt{flex:1;min-width:0;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;font-size:13px;line-height:1.3;padding:4px 0}
+.dt>*{flex:none}.dt b{font-weight:700}.dt span{font-weight:500}.dt .sep{font-style:normal;opacity:.4}
+.dt.two{flex-direction:column;gap:0}.dt.two .sep{display:none}.dt.two span{font-size:12px;opacity:.85}
+.hcd .cdtop{display:none}
+.hero.el{border-color:rgba(47,154,104,.45);box-shadow:0 10px 28px var(--gsh),inset 0 0 0 1px rgba(47,154,104,.18)}
+.hero.el .hic{color:var(--good);filter:drop-shadow(0 4px 10px rgba(47,154,104,.22))}
+.hero.el .hcd .cdtop{display:block;font-size:12.5px;font-weight:700;color:var(--good);margin-bottom:4px}
+.hero.el .hcd b{color:var(--good);font-weight:600;font-size:38px}
+.hero.el .hcd small:last-child{display:none}
+[lang="en"] .hero.el .hcd b{font-size:30px}[lang="en"] .hero.el .hmeta span{font-size:12.5px}
+.hnext{margin-top:10px;padding-top:9px;border-top:1px solid var(--sep);font-size:13px;color:var(--dim);display:flex;justify-content:space-between;gap:10px}
+.hnext b{color:var(--fg);font-family:var(--num);font-variant-numeric:tabular-nums;direction:ltr}
+.pt.cur{box-shadow:0 8px 20px var(--gsh),inset 0 0 0 2px var(--good);opacity:1}
+.pt.cur svg,.pt.cur .n{color:var(--good)}
+.sic{width:30px;height:30px;border-radius:9px;display:inline-grid;place-items:center;color:#fff;font-style:normal;flex:none;margin-inline-end:12px;vertical-align:middle}
+.sic svg{width:17px;height:17px}
+.set .lbl{display:flex;align-items:center}
+.ab-hero{text-align:center;padding:4px 0 6px}
+.ab-hero img{width:84px;height:84px;border-radius:20px;box-shadow:0 10px 24px rgba(60,60,80,.25)}
+.ab-hero h2{margin:12px 0 2px!important}
+.ab-hero .v{font-family:var(--num);font-size:13px;color:var(--faint)}
+.ab-hero .ab-tag{font-size:15px;font-weight:700;color:var(--accent);margin-top:6px}
+.ab-text p{color:var(--fg)!important;font-size:14.5px!important;line-height:1.85;margin:10px 0!important}
+.ab-list{list-style:none;margin:6px 0 4px;padding:4px 14px;background:var(--night-3);border-radius:18px}
+.ab-list li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--sep)}
+.ab-list li:last-child{border-bottom:0}
+.ab-list li>b{font-size:20px;line-height:1.3;flex:none}
+.ab-list li span b{display:block;font-size:14.5px}
+.ab-list li span i{display:block;font-style:normal;font-size:13px;color:var(--dim);line-height:1.6}
+.ab-by{text-align:center;font-size:13px!important;margin:16px 0 0!important}
+.sheet .wamd{margin-top:8px;text-align:center;max-width:140px}
+.sheet .actions{display:flex;flex-direction:column;gap:0}
+.pv{margin-top:4px}
+.pv .card{background:var(--night-3);border-radius:18px;padding:4px 14px 12px;margin-top:12px}
+.pv .tldr{background:rgba(47,154,104,.1);border:1.5px solid rgba(47,154,104,.4)}
+.pv .tldr h2{color:var(--good)}
+.sheet .pv h2{font-size:16px;margin:14px 0 4px;display:flex;align-items:center;gap:8px;line-height:1.4}
+.pv p,.pv li{color:var(--fg)!important;font-size:14px!important;line-height:1.8;margin:6px 0!important}
+.pv ul{padding-inline-start:20px;margin:4px 0}
+.pv code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--night-3);padding:1px 6px;border-radius:6px;direction:ltr;unicode-bidi:isolate}
+:root[data-theme="dark"]{--good:#4fd39a}
+@media (prefers-color-scheme:dark){:root[data-theme="auto"]{--good:#4fd39a}}
 </style>
 </head>
 <body>
@@ -389,6 +439,7 @@ body.gated .tabs{display:none}
         <svg class="sunr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 21a9 9 0 0 1 18 0"/><path d="M3 25h26"/><path d="M16 5v4M6.2 9.6l2.6 2.6M25.8 9.6l-2.6 2.6"/></svg>
       </div>
       <div class="ptitle" id="ptitle"></div>
+      <button class="ploc" id="locBtn" data-ta="location"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span id="locName"></span><svg class="chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
     <button class="moonw" id="moonBtn" data-ta="tabMoon">
       <span class="hij"><b id="hjTop"></b><span id="hjYear"></span></span>
@@ -403,13 +454,9 @@ body.gated .tabs{display:none}
   <!-- الصلاة -->
   <section class="view on" id="v-prayer">
     <div class="chips">
-      <button class="chip" id="locBtn" data-ta="location">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
-        <span id="locName"></span>
-      </button>
       <div class="chip datechip">
         <button id="dayPrev" data-ta="prevDay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-        <span id="gregDate"></span>
+        <span class="dt" id="gregDate"><b id="dtG"></b><i class="sep">|</i><span id="dtH"></span></span>
         <button class="today-btn" id="todayBtn" data-t="today"></button>
         <button id="dayNext" data-ta="nextDay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
@@ -419,8 +466,9 @@ body.gated .tabs{display:none}
       <div class="htop">
         <div class="hic" id="hIcon"></div>
         <div class="hmeta"><small id="hLbl"></small><b id="hName"></b><span id="hAt"></span></div>
-        <div class="hcd"><b id="hCd"></b><small id="hCdLbl"></small></div>
+        <div class="hcd"><small class="cdtop" id="hCdTop"></small><b id="hCd"></b><small id="hCdLbl"></small></div>
       </div>
+      <div class="hnext" id="hNext" hidden></div>
       <div class="dayline"><svg id="dial" viewBox="0 0 340 58" role="img"></svg></div>
     </div>
 
@@ -561,6 +609,15 @@ body.gated .tabs{display:none}
       </div>
     </div>
     <div class="set-group">
+      <h3 data-t="gAbout"></h3>
+      <div class="set">
+        <button id="setAbout"><span class="lbl"><i class="sic" style="background:linear-gradient(135deg,#7FA6C6,#4E7AA3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/></svg></i><span data-t="aboutApp"></span></span><span class="val"><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button id="setShare"><span class="lbl"><i class="sic" style="background:linear-gradient(135deg,#FEAE47,#F0761C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></i><span data-t="shareApp"></span></span><span class="val"><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button id="setContact"><span class="lbl"><i class="sic" style="background:linear-gradient(135deg,#4FC79A,#21875F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg></i><span data-t="contactUs"></span></span><span class="val"><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        <button id="setPrivacy"><span class="lbl"><i class="sic" style="background:linear-gradient(135deg,#9D7BEA,#6A45C9)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></i><span data-t="privacy"></span></span><span class="val"><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
+      </div>
+    </div>
+    <div class="set-group">
       <h3 data-t="gApp"></h3>
       <div class="set">
         <button id="setInstall"><span class="lbl" data-t="addHome"></span><span class="val"><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
@@ -570,20 +627,9 @@ body.gated .tabs{display:none}
     <div class="about">
       <div class="ver" id="aboutVer"></div>
       <div data-t="about1"></div>
-      <div data-t="about2"></div>
       <a class="wamd" href="https://wamdarc.com" target="_blank" rel="noopener" aria-label="WAMD ARC">
-        <svg viewBox="0 0 360 132" aria-hidden="true">
-          <defs>
-            <linearGradient id="wTrail" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0" stop-color="currentColor" stop-opacity="0"/>
-              <stop offset="1" stop-color="currentColor" stop-opacity=".95"/>
-            </linearGradient>
-          </defs>
-          <path d="M118 74 C150 44 196 30 246 28" fill="none" stroke="url(#wTrail)" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M258 15 C259.6 24.5 260.5 25.4 270 27 C260.5 28.6 259.6 29.5 258 39 C256.4 29.5 255.5 28.6 246 27 C255.5 25.4 256.4 24.5 258 15 Z" fill="#FF5A1F"/>
-          <text x="180" y="112" text-anchor="middle" fill="currentColor" font-family="Montserrat, system-ui, sans-serif" font-size="40" letter-spacing="9" style="direction:ltr;unicode-bidi:plaintext"><tspan font-weight="500">WAMD</tspan><tspan font-weight="300" dx="16">ARC</tspan></text>
-        </svg>
-        <span class="tag" id="wamdTag">الشرارة. المسار. المستقبل.</span>
+        <img class="wl" src="icons/wamdarc-light.png" alt="WAMD ARC ومض ارك" width="360" height="222">
+        <img class="wd" src="icons/wamdarc-dark.png" alt="WAMD ARC ومض ارك" width="360" height="222">
         <span class="dom">WAMDARC.COM</span>
       </a>
     </div>

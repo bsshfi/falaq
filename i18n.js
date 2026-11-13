@@ -258,4 +258,25 @@
     todayTimes: "Today's times", dayTimes: d => d + ' times', dayLen: 'Daylight', lastThirdS: 'Last third',
     kaaba: 'The Kaaba', kmUnit: 'km', upNext: 'Up next', hrs: 'h', yourLoc: 'Your location', dayView: 'Day', dayHM: (h, m) => h + 'h ' + m + 'm'
   });
+  /* 2.1: الوقت بعد الأذان، التاريخان، حول التطبيق */
+  Object.assign(root.I18N.ar.s, {
+    curPrayer: 'حان وقت الصلاة', elapsedOn: n => 'مضى على ' + n, nextIn: n => 'التالية: ' + n,
+    gAbout: 'فَلَق', aboutApp: 'حول التطبيق', shareApp: 'مشاركة التطبيق', contactUs: 'تواصل معنا', privacy: 'سياسة الخصوصية',
+    aboutTag: 'السماء أقرب', done: 'تم', close: 'إغلاق', loadFail: 'تعذّر الفتح، حاول مرة ثانية',
+    aboutP1: 'فَلَق يجمع لك ما تحتاجه من السماء في مكان واحد: مواقيت الصلاة، واتجاه القبلة، والقمر ومنازله، وحساب النجوم والمواسم، وأذكار اليوم.',
+    aboutP2: 'كل الحسابات تتم على جوالك، فيعمل بدون إنترنت، وبدون حساب ولا إعلانات.',
+    aboutF: [['🕌', 'مواقيت الصلاة', 'أم القرى وطرق أخرى، مع العد التنازلي وجدول الشهر'], ['🧭', 'القبلة', 'بوصلة مع المسافة إلى الكعبة، والقبلة بالشمس'], ['🌙', 'القمر والنجوم', 'الأطوار والمنازل والهلال والطالع والمواسم'], ['📿', 'الأذكار', 'الصباح والمساء والنوم مع العدّاد'], ['🔔', 'الإشعارات', 'الأذان وقبله، والأذكار، والكهف، والأيام البيض']],
+    aboutBy: 'من تطوير', shareText: 'فَلَق — مواقيت الصلاة والقبلة والقمر ومنازله، يعمل بدون إنترنت 🌙\nhttps://falaq.wamdarc.com/',
+    shareCopied: 'تم نسخ الرابط', mailSubject: 'فَلَق — تواصل'
+  });
+  Object.assign(root.I18N.en.s, {
+    curPrayer: 'Prayer time', elapsedOn: n => 'Since ' + n, nextIn: n => 'Next: ' + n,
+    gAbout: 'FALAQ', aboutApp: 'About', shareApp: 'Share the app', contactUs: 'Contact us', privacy: 'Privacy Policy',
+    aboutTag: 'The sky, closer', done: 'Done', close: 'Close', loadFail: "Couldn't open, please try again",
+    aboutP1: 'Falaq brings what you need from the sky into one place: prayer times, the qibla, the moon and its mansions, the Najdi stars and seasons, and daily adhkar.',
+    aboutP2: 'Everything is calculated on your phone, so it works offline, with no account and no ads.',
+    aboutF: [['🕌', 'Prayer times', 'Umm al-Qura and other methods, countdown and monthly table'], ['🧭', 'Qibla', 'Compass with distance to the Kaaba, and qibla by the sun'], ['🌙', 'Moon & stars', 'Phases, mansions, crescent, rising star and seasons'], ['📿', 'Adhkar', 'Morning, evening and sleep, with a counter'], ['🔔', 'Notifications', 'Adhan and reminders, adhkar, Al-Kahf and the White Days']],
+    aboutBy: 'Made by', shareText: 'Falaq — prayer times, qibla and the moon, works offline 🌙\nhttps://falaq.wamdarc.com/',
+    shareCopied: 'Link copied', mailSubject: 'Falaq — Contact'
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '2.0.1';
+  const VERSION = '2.1';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -129,7 +129,6 @@
     document.querySelectorAll('[data-t]').forEach(e => { e.textContent = L(e.dataset.t); });
     document.querySelectorAll('[data-ta]').forEach(e => { e.setAttribute('aria-label', L(e.dataset.ta)); });
     $('#dial').setAttribute('aria-label', L('dialLabel'));
-    $('#wamdTag').hidden = isEn();
     $('#setMethod').innerHTML = '';
   }
 
@@ -200,14 +199,18 @@
     const T = timesFor(ymd), Tn = timesFor(ymdAdd(ymd, 1));
     const isToday = dayOffset === 0;
 
-    $('#gregDate').textContent = ymdStr(ymd);
+    const hj = hijriOf(ymd), dt = $('#gregDate');
+    $('#dtG').textContent = wdOf(ymd) + (isEn() ? ', ' : ' ') + dm(ymd.d, ymd.m, ymd.y);
+    $('#dtH').textContent = hj ? num(hj.day) + ' ' + D.hMonths[hj.month - 1] + ' (' + num(hj.month) + ') ' + num(hj.year) + (isEn() ? '' : ' ') + D.ah : '';
+    dt.classList.remove('two');
     $('#todayBtn').classList.toggle('show', !isToday);
+    if (dt.scrollWidth > dt.clientWidth + 1) dt.classList.add('two');
     $('#timesTitle').textContent = isToday ? L('todayTimes') : L('dayTimes', wdOf(ymd));
 
-    const nxt = nextEvent(now);
+    const nxt = nextEvent(now), cur = isToday ? curElapsed(now) : null;
     $('#timesList').innerHTML = KEYS.map(k => {
       let cls = 'pt';
-      if (isToday) { if (nxt && nxt.key === k && nxt.ymd.d === ymd.d) cls += ' next'; else if (T[k] && T[k] < now) cls += ' past'; }
+      if (isToday) { if (nxt && nxt.key === k && nxt.ymd.d === ymd.d) cls += ' next'; else if (cur && cur.key === k && cur.ymd.d === ymd.d) cls += ' cur'; else if (T[k] && T[k] < now) cls += ' past'; }
       return '<li class="' + cls + '">' + PICON[k] + '<span class="n">' + pName(k, ymd) + '</span><span class="v">' + timeHTML(T[k]) + '</span></li>';
     }).join('');
 
@@ -265,11 +268,26 @@
   function localMidnight(ymd) { const t = Date.UTC(ymd.y, ymd.m - 1, ymd.d); return t - tzOffsetMin(new Date(t + 12 * 36e5), TZ()) * 6e4; }
 
   // البطاقة الكبيرة: الصلاة القادمة والعد التنازلي (أو اليوم المختار)
+  // بعد الأذان: «مضى على العصر» لمدة 35 دقيقة (المغرب 25 دقيقة)، ثم العد التنازلي للقادمة
+  const ELAPSED_MIN = { fajr: 35, dhuhr: 35, asr: 35, maghrib: 25, isha: 35 };
+  function curElapsed(now) {
+    for (const off of [0, -1]) {
+      const ymd = ymdAdd(todayYMD(), off), T = timesFor(ymd);
+      for (const k of ['isha', 'maghrib', 'asr', 'dhuhr', 'fajr']) {
+        const t = T[k]; if (!t) continue;
+        const ms = now - t;
+        if (ms >= 0 && ms < ELAPSED_MIN[k] * 6e4) return { key: k, time: t, ymd, ms };
+      }
+    }
+    return null;
+  }
+  let heroState = '';
   function renderCenter() {
-    const cd = $('#hCd'), cl = $('#hCdLbl');
+    const cd = $('#hCd'), cl = $('#hCdLbl'), hero = $('#hero'), hn = $('#hNext');
     if (dayOffset !== 0) {
       const ymd = ymdAdd(todayYMD(), dayOffset);
-      $('#hIcon').innerHTML = PICON.cal;
+      hero.classList.remove('el'); hn.hidden = true; heroState = '';
+      $('#hIcon').innerHTML = PICON.cal; $('#hIcon').dataset.k = '';
       $('#hLbl').textContent = hijriStr(hijriOf(ymd));
       $('#hName').textContent = wdOf(ymd);
       $('#hAt').textContent = dm(ymd.d, ymd.m, ymd.y);
@@ -277,10 +295,27 @@
       cl.textContent = dayOffset > 0 ? L('inTime', durTxt(dayOffset * DAY)) : L('agoTime', durTxt(-dayOffset * DAY));
       return;
     }
-    const now = new Date(), n = nextEvent(now);
+    const now = new Date(), n = nextEvent(now), e = curElapsed(now);
     if (!n) return;
+    const st = e ? 'e' + e.key : 'n' + n.key;
+    if (heroState && st !== heroState) { heroState = st; renderPrayer(); return; }
+    heroState = st;
     const tm = fmtTime(n.time) + (n.ymd.d !== todayYMD().d ? L('tomorrow') : '');
-    if ($('#hIcon').dataset.k !== n.key) { $('#hIcon').innerHTML = PICON[n.key]; $('#hIcon').dataset.k = n.key; }
+    const ic = e ? e.key : n.key;
+    if ($('#hIcon').dataset.k !== ic) { $('#hIcon').innerHTML = PICON[ic]; $('#hIcon').dataset.k = ic; }
+    hero.classList.toggle('el', !!e);
+    if (e) {
+      const nm = pName(e.key, e.ymd), s = Math.floor(e.ms / 1000);
+      $('#hLbl').textContent = L('curPrayer');
+      $('#hName').textContent = nm;
+      $('#hAt').innerHTML = L('adhanAt', fmtTime(e.time));
+      $('#hCdTop').textContent = L('elapsedOn', nm);
+      cd.textContent = '+' + num(Math.floor(s / 60) + ':' + pad(s % 60));
+      hn.hidden = false;
+      hn.innerHTML = '<span>' + L('nextIn', pName(n.key, n.ymd)) + ' · ' + tm + '</span><b>' + countdown(n.time - now) + '</b>';
+      return;
+    }
+    hn.hidden = true;
     $('#hLbl').textContent = L(n.key === 'sunrise' ? 'upNext' : 'nextPrayer');
     $('#hName').textContent = pName(n.key, n.ymd);
     $('#hAt').innerHTML = n.key === 'sunrise' ? '<b>' + tm + '</b>' : L('adhanAt', tm);
@@ -302,6 +337,7 @@
     const il = A.moonIllumination(new Date());
     $('#moonMini').innerHTML = '<defs><radialGradient id="mmLit" cx="40%" cy="38%" r="70%"><stop offset="0" stop-color="#FBF6EA"/><stop offset=".7" stop-color="#E9E1CF"/><stop offset="1" stop-color="#CFC6B2"/></radialGradient></defs>' +
       '<circle r="12" fill="#2B3247" fill-opacity=".88"/>' + moonPath(il.fraction, il.waxing, 12);
+    $('#ptitle').hidden = current === 'prayer'; $('#locBtn').hidden = current !== 'prayer';
     $('#ptitle').textContent = L({ prayer: 'tagline', qibla: 'pQibla', azkar: 'pAzkar', moon: 'pMoon', settings: 'pSettings' }[current] || 'tagline');
   }
 
@@ -1002,6 +1038,44 @@
   $('#setGps').onclick = () => useGPS(false);
   $('#setCity').onclick = openLocation;
   $('#setInstall').onclick = openInstall;
+  /* حول التطبيق، المشاركة، التواصل، الخصوصية (نفس خُطى) */
+  const APP_URL = 'https://falaq.wamdarc.com/', MAIL = 'falaq@wamdarc.com';
+  const appName = () => isEn() ? 'FALAQ | فلق' : 'فلق | Falaq';
+  $('#setAbout').onclick = () => {
+    const logo = $('.about .wamd').outerHTML;
+    sheet('<div class="ab-hero"><img src="icons/icon-192.png" alt=""><h2>' + appName() + '</h2><div class="v">v' + num(VERSION) + '</div><div class="ab-tag">' + L('aboutTag') + '</div></div>' +
+      '<div class="ab-text"><p>' + L('aboutP1') + '</p><p>' + L('aboutP2') + '</p></div>' +
+      '<ul class="ab-list">' + L('aboutF').map(([e, t, d]) => '<li><b>' + e + '</b><span><b>' + t + '</b><i>' + d + '</i></span></li>').join('') + '</ul>' +
+      '<p class="ab-by">' + L('aboutBy') + '</p>' + logo +
+      '<button class="link-btn primary" id="abShare">' + L('shareApp') + '</button><button class="link-btn" id="abClose">' + L('close') + '</button>', () => {
+      $('#abShare').onclick = shareApp; $('#abClose').onclick = closeSheet;
+    });
+  };
+  async function shareApp() {
+    const text = L('shareText');
+    if (navigator.share) {
+      try { await navigator.share({ text }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(text); toast(L('shareCopied')); } catch (e) { toast(APP_URL); }
+  }
+  $('#setShare').onclick = shareApp;
+  $('#setContact').onclick = () => { location.href = 'mailto:' + MAIL + '?subject=' + encodeURIComponent(L('mailSubject') + ' v' + VERSION); };
+  $('#setPrivacy').onclick = async () => {
+    let body = '';
+    try {
+      const html = await (await fetch('privacy.html')).text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const main = doc.getElementById(isEn() ? 'en' : 'ar');
+      if (main) { main.querySelectorAll('script,style').forEach(x => x.remove()); body = main.innerHTML; }
+    } catch (e) {}
+    if (!body) { toast(L('loadFail')); return; }
+    sheet('<div class="ab-hero"><img src="icons/icon-192.png" alt=""><h2>' + L('privacy') + '</h2><div class="v">' + appName() + '</div></div>' +
+      '<div class="pv">' + body + '</div><button class="link-btn primary" id="pvClose">' + L('done') + '</button>', () => {
+      document.querySelectorAll('.pv a[href^="http"]').forEach(x => { x.target = '_blank'; x.rel = 'noopener'; });
+      $('#pvClose').onclick = closeSheet;
+    });
+  };
   $('#compassBtn').onclick = startCompass;
   $('#sunCalBtn').onclick = sunCalibrate;
   $('#setUpdate').onclick = () => {

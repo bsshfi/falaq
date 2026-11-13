@@ -272,13 +272,13 @@ select option{background:var(--sheet);color:var(--fg)}
 /* عن التطبيق */
 .about{text-align:center;padding:26px 0 8px;color:var(--dim);font-size:13px}
 .about .ver{color:var(--fg);font-size:16px;font-weight:700;margin-bottom:4px}
-.wamd{display:block;margin:22px auto 0;max-width:165px;text-decoration:none;color:var(--fg)}
+.wamd{display:block;margin:14px auto 0;width:132px;text-decoration:none;color:var(--fg)}
 .wamd img{width:100%;height:auto;display:block}
 .wamd .wd{display:none}
 :root[data-theme="dark"] .wamd .wl{display:none}:root[data-theme="dark"] .wamd .wd{display:block}
 @media (prefers-color-scheme:dark){:root[data-theme="auto"] .wamd .wl{display:none}:root[data-theme="auto"] .wamd .wd{display:block}}
 .wamd .tag{display:block;font-size:13px;color:var(--dim);margin-top:4px}
-.wamd .dom{display:block;font-family:Montserrat,system-ui,sans-serif;font-weight:300;font-size:11px;letter-spacing:.24em;color:var(--faint);margin-top:2px;direction:ltr}
+.wamd .dom{display:block;font-family:Montserrat,system-ui,sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.26em;color:var(--faint);margin-top:3px;direction:ltr;opacity:.8}
 
 /* الأذكار */
 .zk-top{display:flex;align-items:center;gap:8px;margin-top:16px}
@@ -410,7 +410,7 @@ body.gated .tabs{display:none}
 .ab-list li span b{display:block;font-size:14.5px}
 .ab-list li span i{display:block;font-style:normal;font-size:13px;color:var(--dim);line-height:1.6}
 .ab-by{text-align:center;font-size:13px!important;margin:16px 0 0!important}
-.sheet .wamd{margin-top:8px;text-align:center;max-width:140px}
+.sheet .wamd{margin-top:8px;text-align:center;width:132px}
 .sheet .actions{display:flex;flex-direction:column;gap:0}
 .pv{margin-top:4px}
 .pv .card{background:var(--night-3);border-radius:18px;padding:4px 14px 12px;margin-top:12px}
@@ -644,8 +644,8 @@ body.gated .tabs{display:none}
       <div class="ver" id="aboutVer"></div>
       <div data-t="about1"></div>
       <a class="wamd" href="https://wamdarc.com" target="_blank" rel="noopener" aria-label="WAMD ARC">
-        <img class="wl" src="icons/wamdarc-light.png" alt="WAMD ARC ومض ارك" width="360" height="222">
-        <img class="wd" src="icons/wamdarc-dark.png" alt="WAMD ARC ومض ارك" width="360" height="222">
+        <img class="wl" src="icons/wamdarc-light.png" alt="WAMD ARC ومض ارك" width="132" height="21">
+        <img class="wd" src="icons/wamdarc-dark.png" alt="WAMD ARC ومض ارك" width="132" height="21">
         <span class="dom">WAMDARC.COM</span>
       </a>
     </div>

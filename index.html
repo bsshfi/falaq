@@ -396,7 +396,7 @@ body.gated .tabs{display:none}
 .pt.cur svg,.pt.cur .n{color:var(--good)}
 .sic{width:30px;height:30px;border-radius:9px;display:inline-grid;place-items:center;color:#fff;font-style:normal;flex:none;margin-inline-end:12px;vertical-align:middle}
 .sic svg{width:17px;height:17px}
-.set .lbl{display:flex;align-items:center}
+.set .lbl:has(>.sic){display:flex;align-items:center}
 .ab-hero{text-align:center;padding:4px 0 6px}
 .ab-hero img{width:84px;height:84px;border-radius:20px;box-shadow:0 10px 24px rgba(60,60,80,.25)}
 .ab-hero h2{margin:12px 0 2px!important}
@@ -422,6 +422,18 @@ body.gated .tabs{display:none}
 .pv code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--night-3);padding:1px 6px;border-radius:6px;direction:ltr;unicode-bidi:isolate}
 :root[data-theme="dark"]{--good:#4fd39a}
 @media (prefers-color-scheme:dark){:root[data-theme="auto"]{--good:#4fd39a}}
+
+/* 2.2: شريحة الموقع بجانب التاريخ */
+.chips{align-items:stretch}
+.chips .chip{height:auto;min-height:52px}
+.locchip{flex:none;max-width:40%;gap:8px;padding:0 12px 0 8px;justify-content:flex-start}
+[dir="ltr"] .locchip{padding:0 8px 0 12px}
+.lpin{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-style:normal;color:#fff;background:linear-gradient(180deg,#ff9d45,var(--arrow));box-shadow:0 4px 10px rgba(245,132,31,.35)}
+.lpin svg{opacity:1!important}
+.lt{display:flex;flex-direction:column;align-items:flex-start;min-width:0;line-height:1.25;text-align:start}
+.lt b{font-size:14px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt small{font-size:11px;font-weight:500;opacity:.7}
+.datechip{width:auto;flex:1;min-width:0}
 </style>
 </head>
 <body>
@@ -439,7 +451,6 @@ body.gated .tabs{display:none}
         <svg class="sunr" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 21a9 9 0 0 1 18 0"/><path d="M3 25h26"/><path d="M16 5v4M6.2 9.6l2.6 2.6M25.8 9.6l-2.6 2.6"/></svg>
       </div>
       <div class="ptitle" id="ptitle"></div>
-      <button class="ploc" id="locBtn" data-ta="location"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span id="locName"></span><svg class="chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
     <button class="moonw" id="moonBtn" data-ta="tabMoon">
       <span class="hij"><b id="hjTop"></b><span id="hjYear"></span></span>
@@ -454,6 +465,10 @@ body.gated .tabs{display:none}
   <!-- الصلاة -->
   <section class="view on" id="v-prayer">
     <div class="chips">
+      <button class="chip locchip" id="locBtn" data-ta="location">
+        <i class="lpin"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></i>
+        <span class="lt"><b id="locName"></b><small data-t="yourLoc"></small></span>
+      </button>
       <div class="chip datechip">
         <button id="dayPrev" data-ta="prevDay"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
         <span class="dt" id="gregDate"><b id="dtG"></b><i class="sep">|</i><span id="dtH"></span></span>
@@ -605,6 +620,7 @@ body.gated .tabs{display:none}
     <div class="set-group">
       <h3 data-t="gCompass"></h3>
       <div class="set">
+        <div><span class="lbl"><span data-t="northLbl"></span><small data-t="northHint"></small></span><span class="val ltr" id="declVal"></span></div>
         <div><span class="lbl" data-t="compassCorr"></span><span class="stepper" id="setOffset"><button data-d="1">+</button><output></output><button data-d="-1">−</button></span></div>
       </div>
     </div>
@@ -668,6 +684,7 @@ body.gated .tabs{display:none}
 <script src="azkar.js"></script>
 <script src="wamd-push.js"></script>
 <script src="i18n.js"></script>
+<script src="wmm.js"></script>
 <script src="app.js"></script>
 <script src="wamd-stats.js" data-app="falaq"></script>
 <script src="wamd-cfg.js" data-app="falaq" defer></script>

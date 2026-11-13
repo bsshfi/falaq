@@ -279,4 +279,13 @@
     aboutBy: 'Made by', shareText: 'Falaq — prayer times, qibla and the moon, works offline 🌙\nhttps://falaq.wamdarc.com/',
     shareCopied: 'Link copied', mailSubject: 'Falaq — Contact'
   });
+  /* 2.2: الشمال الحقيقي */
+  Object.assign(root.I18N.ar.s, {
+    northLbl: 'الشمال الحقيقي',
+    northHint: 'بوصلة الجوال تقيس الشمال المغناطيسي، وفلق يصححه تلقائياً للشمال الحقيقي حسب مكانك من النموذج المغناطيسي العالمي WMM2025 (في الرياض حوالي 3°)، فتصير القبلة أدق. يعمل بدون إنترنت.'
+  });
+  Object.assign(root.I18N.en.s, {
+    northLbl: 'True north',
+    northHint: 'Phone compasses measure magnetic north. Falaq corrects it to true north for where you are using the World Magnetic Model WMM2025 (about 3° in Riyadh), so the qibla is more accurate. Works offline.'
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

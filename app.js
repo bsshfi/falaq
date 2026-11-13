@@ -1,7 +1,7 @@
 /* فَلَق | FALAQ — واجهة التطبيق */
 (function () {
   'use strict';
-  const VERSION = '2.1';
+  const VERSION = '2.2';
   const A = window.Astro;
   const $ = s => document.querySelector(s);
   const DAY = 864e5;
@@ -59,6 +59,11 @@
   const locLabel = () => cityName(S.loc.city) || coordTxt();
   // ترحيل من الإصدار 1.0 (كان يخزن الاسم)
   if (S.loc && S.loc.city === undefined) { S.loc.city = nearestCity(S.loc.lat, S.loc.lng); delete S.loc.name; save(); }
+  // 2.2: صار التطبيق يصحح للشمال الحقيقي، فالتصحيح المحفوظ من قبل كان يشمل الانحراف المغناطيسي
+  if (!S.trueNorth) {
+    if (S.compassOffset && window.WMM && S.loc) S.compassOffset = Math.round(S.compassOffset - WMM.declAt(S.loc.lat, S.loc.lng));
+    S.trueNorth = 1; save();
+  }
 
   /* ---------- التنسيق ---------- */
   const AR_DIG = '٠١٢٣٤٥٦٧٨٩';
@@ -202,9 +207,8 @@
     const hj = hijriOf(ymd), dt = $('#gregDate');
     $('#dtG').textContent = wdOf(ymd) + (isEn() ? ', ' : ' ') + dm(ymd.d, ymd.m, ymd.y);
     $('#dtH').textContent = hj ? num(hj.day) + ' ' + D.hMonths[hj.month - 1] + ' (' + num(hj.month) + ') ' + num(hj.year) + (isEn() ? '' : ' ') + D.ah : '';
-    dt.classList.remove('two');
+    dt.classList.add('two');
     $('#todayBtn').classList.toggle('show', !isToday);
-    if (dt.scrollWidth > dt.clientWidth + 1) dt.classList.add('two');
     $('#timesTitle').textContent = isToday ? L('todayTimes') : L('dayTimes', wdOf(ymd));
 
     const nxt = nextEvent(now), cur = isToday ? curElapsed(now) : null;
@@ -337,7 +341,6 @@
     const il = A.moonIllumination(new Date());
     $('#moonMini').innerHTML = '<defs><radialGradient id="mmLit" cx="40%" cy="38%" r="70%"><stop offset="0" stop-color="#FBF6EA"/><stop offset=".7" stop-color="#E9E1CF"/><stop offset="1" stop-color="#CFC6B2"/></radialGradient></defs>' +
       '<circle r="12" fill="#2B3247" fill-opacity=".88"/>' + moonPath(il.fraction, il.waxing, 12);
-    $('#ptitle').hidden = current === 'prayer'; $('#locBtn').hidden = current !== 'prayer';
     $('#ptitle').textContent = L({ prayer: 'tagline', qibla: 'pQibla', azkar: 'pAzkar', moon: 'pMoon', settings: 'pSettings' }[current] || 'tagline');
   }
 
@@ -439,6 +442,13 @@
     if (aligned && !wasAligned && navigator.vibrate) navigator.vibrate(30);
     wasAligned = aligned;
   }
+  // الانحراف المغناطيسي لمكانك (WMM2025) — بوصلة الجوال تعطي الشمال المغناطيسي
+  let declCache = null;
+  function decl() {
+    const l = S.loc;
+    if (!declCache || Math.abs(l.lat - declCache.lat) > 0.2 || Math.abs(l.lng - declCache.lng) > 0.2) declCache = { d: window.WMM ? WMM.declAt(l.lat, l.lng) : 0, lat: l.lat, lng: l.lng };
+    return declCache.d;
+  }
   function onOrient(e) {
     let h = null;
     if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) h = e.webkitCompassHeading;
@@ -446,7 +456,7 @@
     else if (!gotAbsolute && e.absolute && e.alpha !== null) h = 360 - e.alpha;
     if (h === null) return;
     const so = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
-    heading = ((h + so) % 360 + 360) % 360; // قراءة خام بدون تنعيم
+    heading = ((h + so + decl()) % 360 + 360) % 360; // قراءة خام بدون تنعيم، مصححة من المغناطيسي للحقيقي
     // بيانات تقدير الجودة فقط — لا تغيّر القراءة المعروضة
     if (typeof e.webkitCompassAccuracy === 'number') compassAcc = e.webkitCompassAccuracy;
     if (e.beta !== null && e.gamma !== null) tilt = Math.max(Math.abs(e.beta), Math.abs(e.gamma));
@@ -768,6 +778,8 @@
       const k = b.parentNode.dataset.k; S.adjust[k] = Math.max(-30, Math.min(30, S.adjust[k] + +b.dataset.d)); save(); renderSettings(); renderPrayer();
     });
     const off = $('#setOffset');
+    const dv = decl();
+    $('#declVal').textContent = (dv >= 0 ? '+' : '−') + num(Math.abs(dv).toFixed(1)) + '°';
     off.querySelector('output').textContent = (S.compassOffset > 0 ? '+' : '') + num(S.compassOffset) + '°';
     off.querySelectorAll('button').forEach(b => b.onclick = () => { S.compassOffset = norm180(S.compassOffset + +b.dataset.d); save(); renderSettings(); });
     renderNotify();
